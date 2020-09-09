@@ -1,4 +1,4 @@
-create schema if not exists automotriz;
+create database if not exists automotriz;
 use automotriz;
 
 CREATE TABLE `modelo` (
@@ -30,11 +30,11 @@ CREATE TABLE `insumo` (
 
 CREATE TABLE `pedido_insumo` (
   `id` INT primary key AUTO_INCREMENT,
-  `autoparte_id` INT,
+  `insumo_id` INT,
   `proveedor_id` INT,
   `cantidad` FLOAT,
 
-foreign key (autoparte_id) references insumo(id),
+foreign key (insumo_id) references insumo(id),
 foreign key (proveedor_id) references proveedor(id)
 );
 
@@ -62,29 +62,24 @@ foreign key (modelo_id) references modelo(id)
 );
 
 CREATE TABLE `estacion` (
-  `id` INT AUTO_INCREMENT,
+  `id` INT primary key AUTO_INCREMENT,
   `linea_montaje_id` INT,
   `descripcion` varchar(20) not null,
-primary key (id, linea_montaje_id),
 
 foreign key (linea_montaje_id) references linea_montaje(id)
 );
 
 
 CREATE TABLE `pedido_venta` (
-  `id` INT AUTO_INCREMENT,
+  `id` INT primary key AUTO_INCREMENT,
   `concesionaria_id` INT,
   `modelo_id` INT,
   `cantidad` INT,
   `fecha_entrega` DATE,
-primary key (id, concesionaria_id, modelo_id),
 
 foreign key (concesionaria_id) references concesionaria(id),
 foreign key (modelo_id) references modelo(id)
 );
-
-
-
 
 
 CREATE TABLE `proveedor_x_insumo` (
@@ -112,11 +107,11 @@ foreign key (vehiculo_num_chasis) references vehiculo (num_chasis)
 
 CREATE TABLE `insumo_x_estacion` (
   `estacion_id` INT,
-  `autoparte_id` INT,
+  `insumo_id` INT,
   `cantidad` FLOAT,
-primary key(estacion_id, autoparte_id),
+primary key(estacion_id, insumo_id),
 
 foreign key (estacion_id) references estacion(id),
-foreign key (autoparte_id) references insumo(id)
+foreign key (insumo_id) references insumo(id)
 );
 
