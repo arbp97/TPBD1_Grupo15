@@ -2,11 +2,10 @@ create schema if not exists automotriz;
 use automotriz;
 
 CREATE TABLE `pedido_insumo` (
-  `id` INT AUTO_INCREMENT,
+  `id` INT primary key AUTO_INCREMENT,
   `autoparte_id` INT,
   `proveedor_id` INT,
   `cantidad` FLOAT,
-primary key(id, autoparte_id, proveedor_id),
 
 foreign key (autoparte_id) references insumo(id),
 foreign key (proveedor_id) references proveedor(id)
