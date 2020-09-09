@@ -21,6 +21,13 @@ CREATE TABLE `concesionaria` (
 );
 
 
+CREATE TABLE `insumo` (
+  `id` INT primary key AUTO_INCREMENT,
+  `nombre` varchar(20) not null,
+  `descripcion` varchar(20) not null
+);
+
+
 CREATE TABLE `pedido_insumo` (
   `id` INT primary key AUTO_INCREMENT,
   `autoparte_id` INT,
@@ -32,11 +39,7 @@ foreign key (proveedor_id) references proveedor(id)
 );
 
 
-CREATE TABLE `insumo` (
-  `id` INT primary key AUTO_INCREMENT,
-  `nombre` varchar(20) not null,
-  `descripcion` varchar(20) not null
-);
+
 
 
 CREATE TABLE `vehiculo` (
@@ -49,6 +52,15 @@ constraint fk_modelo foreign key (modelo_id) references modelo(id)
 );
 
 
+CREATE TABLE `linea_montaje` (
+  `id` INT AUTO_INCREMENT,
+  `modelo_id` INT,
+  `vehiculos_mes` FLOAT,
+primary key (id, modelo_id),
+
+foreign key (modelo_id) references modelo(id)
+);
+
 CREATE TABLE `estacion` (
   `id` INT AUTO_INCREMENT,
   `linea_montaje_id` INT,
@@ -60,7 +72,7 @@ foreign key (linea_montaje_id) references linea_montaje(id)
 
 
 CREATE TABLE `pedido_venta` (
-  `id` INT primary key AUTO_INCREMENT,
+  `id` INT AUTO_INCREMENT,
   `concesionaria_id` INT,
   `modelo_id` INT,
   `cantidad` INT,
@@ -72,14 +84,7 @@ foreign key (modelo_id) references modelo(id)
 );
 
 
-CREATE TABLE `linea_montaje` (
-  `id` INT AUTO_INCREMENT,
-  `modelo_id` INT,
-  `vehiculos_mes` FLOAT,
-primary key (id, modelo_id),
 
-foreign key (modelo_id) references modelo(id)
-);
 
 
 CREATE TABLE `proveedor_x_insumo` (
@@ -115,5 +120,3 @@ foreign key (estacion_id) references estacion(id),
 foreign key (autoparte_id) references insumo(id)
 );
 
-
-CREATE TABLE terminal
