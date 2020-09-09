@@ -1,6 +1,26 @@
 create schema if not exists automotriz;
 use automotriz;
 
+CREATE TABLE `modelo` (
+  `id` INT primary key AUTO_INCREMENT,
+  `nombre` varchar(20) not null
+);
+
+
+CREATE TABLE `proveedor` (
+  `id` INT primary key AUTO_INCREMENT,
+  `nombre` varchar(20) not null,
+  `rubro` varchar(20) not null
+);
+
+
+CREATE TABLE `concesionaria` (
+  `id` INT primary key AUTO_INCREMENT,
+  `nombre` varchar(20) not null,
+  `direccion` varchar(20) not null
+);
+
+
 CREATE TABLE `pedido_insumo` (
   `id` INT primary key AUTO_INCREMENT,
   `autoparte_id` INT,
@@ -18,15 +38,6 @@ CREATE TABLE `insumo` (
   `descripcion` varchar(20) not null
 );
 
-CREATE TABLE `insumo_x_estacion` (
-  `estacion_id` INT,
-  `autoparte_id` INT,
-  `cantidad` FLOAT,
-primary key(estacion_id, autoparte_id),
-
-foreign key (estacion_id) references estacion(id),
-foreign key (autoparte_id) references insumo(id)
-);
 
 CREATE TABLE `vehiculo` (
   `num_chasis` INT AUTO_INCREMENT,
@@ -37,15 +48,16 @@ primary key(num_chasis, modelo_id),
 constraint fk_modelo foreign key (modelo_id) references modelo(id)
 );
 
-CREATE TABLE `proveedor_x_insumo` (
-  `insumo_id` INT,
-  `proveedor_id` INT,
-  `precio` FLOAT,
-primary key (insumo_id, proveedor_id),
 
-foreign key (insumo_id) references insumo(id),
-foreign key (proveedor_id) references proveedor(id)
+CREATE TABLE `estacion` (
+  `id` INT AUTO_INCREMENT,
+  `linea_montaje_id` INT,
+  `descripcion` varchar(20) not null,
+primary key (id, linea_montaje_id),
+
+foreign key (linea_montaje_id) references linea_montaje(id)
 );
+
 
 CREATE TABLE `pedido_venta` (
   `id` INT primary key AUTO_INCREMENT,
@@ -59,6 +71,7 @@ foreign key (concesionaria_id) references concesionaria(id),
 foreign key (modelo_id) references modelo(id)
 );
 
+
 CREATE TABLE `linea_montaje` (
   `id` INT AUTO_INCREMENT,
   `modelo_id` INT,
@@ -68,14 +81,17 @@ primary key (id, modelo_id),
 foreign key (modelo_id) references modelo(id)
 );
 
-CREATE TABLE `estacion` (
-  `id` INT AUTO_INCREMENT,
-  `linea_montaje_id` INT,
-  `descripcion` varchar(20) not null,
-primary key (id, linea_montaje_id),
 
-foreign key (linea_montaje_id) references linea_montaje(id)
+CREATE TABLE `proveedor_x_insumo` (
+  `insumo_id` INT,
+  `proveedor_id` INT,
+  `precio` FLOAT,
+primary key (insumo_id, proveedor_id),
+
+foreign key (insumo_id) references insumo(id),
+foreign key (proveedor_id) references proveedor(id)
 );
+
 
 CREATE TABLE `vehiculo_x_estacion` (
   `vehiculo_num_chasis` INT,
@@ -88,21 +104,16 @@ foreign key (estacion_id) references estacion (id),
 foreign key (vehiculo_num_chasis) references vehiculo (num_chasis)
 );
 
-CREATE TABLE `concesionaria` (
-  `id` INT primary key AUTO_INCREMENT,
-  `nombre` varchar(20) not null,
-  `direccion` varchar(20) not null
+
+CREATE TABLE `insumo_x_estacion` (
+  `estacion_id` INT,
+  `autoparte_id` INT,
+  `cantidad` FLOAT,
+primary key(estacion_id, autoparte_id),
+
+foreign key (estacion_id) references estacion(id),
+foreign key (autoparte_id) references insumo(id)
 );
 
-CREATE TABLE `proveedor` (
-  `id` INT primary key AUTO_INCREMENT,
-  `nombre` varchar(20) not null,
-  `rubro` varchar(20) not null
-);
-
-CREATE TABLE `modelo` (
-  `id` INT primary key AUTO_INCREMENT,
-  `nombre` varchar(20) not null
-);
 
 CREATE TABLE terminal
