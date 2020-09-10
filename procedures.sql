@@ -1,11 +1,12 @@
+DELIMITER \\
+
 CREATE PROCEDURE alta_concesionaria(nombre VARCHAR(100), direccion VARCHAR(100))
 BEGIN
 
 INSERT INTO concesionaria(nombre,direccion)
 VALUES(nombre,direccion);
 
-END;
-
+END\\
 
 CREATE PROCEDURE mod_concesionaria(id INT, nombre VARCHAR(100), direccion VARCHAR(100))
 BEGIN
@@ -32,11 +33,22 @@ UPDATE concesionaria
     direccion = new_direccion
   WHERE id = id;
 
-END;
+END\\
 
 CREATE PROCEDURE baja_concesionaria (id INT, nombre VARCHAR (100), direccion VARCHAR(100))
 BEGIN
 
-DELETE id, nombre, direccion FROM concesionaria WHERE id = id
+DELETE FROM concesionaria WHERE id = id;
 
-END;
+END\\
+
+
+DELIMITER ;
+
+CALL alta_concesionaria("pete", "peron");
+set SQL_SAFE_UPDATES=0;
+CALL mod_concesionaria (1, "tuvieja", "encuatriciclo");
+
+CALL baja_concesionaria(1,"asdas","asdgfg");
+
+select * from concesionaria;
