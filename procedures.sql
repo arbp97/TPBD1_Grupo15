@@ -33,3 +33,10 @@ UPDATE concesionaria
   WHERE id = id;
 
 END;
+
+CREATE PROCEDURE baja_concesionaria (id INT, nombre VARCHAR (100), direccion VARCHAR(100))
+BEGIN
+
+DELETE id, nombre, direccion FROM concesionaria WHERE id = id
+
+END;
