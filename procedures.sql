@@ -1,4 +1,4 @@
-DELIMITER $$7
+DELIMITER $$
 
 DROP PROCEDURE IF EXISTS alta_concesionaria$$ 
 CREATE PROCEDURE alta_concesionaria(nombre VARCHAR(100), direccion VARCHAR(100))
