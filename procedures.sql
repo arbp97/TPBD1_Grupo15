@@ -1,13 +1,15 @@
-DELIMITER \\
+DELIMITER $$7
 
+DROP PROCEDURE IF EXISTS alta_concesionaria$$ 
 CREATE PROCEDURE alta_concesionaria(nombre VARCHAR(100), direccion VARCHAR(100))
 BEGIN
 
 INSERT INTO concesionaria(nombre,direccion)
 VALUES(nombre,direccion);
 
-END;
+END$$
 
+DROP PROCEDURE IF EXISTS mod_concesionaria$$ 
 CREATE PROCEDURE mod_concesionaria(id INT, nombre VARCHAR(100), direccion VARCHAR(100))
 BEGIN
 	
@@ -33,14 +35,15 @@ UPDATE concesionaria
     direccion = new_direccion
   WHERE id = id;
 
-END;
+END$$
 
+DROP PROCEDURE IF EXISTS baja_concesionaria$$
 CREATE PROCEDURE baja_concesionaria (id INT)
 BEGIN
 
 DELETE FROM concesionaria WHERE id = id;
 
-END;
+END$$
 
 
 DELIMITER ;
