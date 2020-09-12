@@ -6,25 +6,25 @@ use automotriz;
 
 CREATE TABLE `concesionaria` (
 	`id` INT primary key AUTO_INCREMENT,
-	`nombre` varchar(20) not null,
-	`direccion` varchar(20) not null
+	`nombre` varchar(100) not null,
+	`direccion` varchar(100) not null
 );
 
 CREATE TABLE `modelo` (
 	`id` INT primary key AUTO_INCREMENT,
-	`nombre` varchar(20) not null
+	`nombre` varchar(100) not null
 );
 
 CREATE TABLE `proveedor` (
 	`id` INT primary key AUTO_INCREMENT,
-	`nombre` varchar(20) not null,
-	`rubro` varchar(20) not null
+	`nombre` varchar(100) not null,
+	`rubro` varchar(100) not null
 );
 
 CREATE TABLE `insumo` (
 	`id` INT primary key AUTO_INCREMENT,
-	`nombre` varchar(20) not null,
-	`descripcion` varchar(50) not null
+	`nombre` varchar(100) not null,
+	`descripcion` varchar(100) not null
 );
 
 
@@ -55,7 +55,7 @@ CREATE TABLE `linea_montaje` (
 CREATE TABLE `estacion` (
 	`id` INT primary key AUTO_INCREMENT,
 	`linea_montaje_id` int not null,
-	`descripcion` varchar(50) not null,
+	`descripcion` varchar(100) not null,
 	foreign key (linea_montaje_id) references linea_montaje(id)
 );
 
