@@ -17,13 +17,11 @@ BEGIN
 	DECLARE new_direccion VARCHAR(100);
 
 	IF nombre IS NULL OR nombre='' THEN	
-		-- SET new_nombre = SELECT concesionaria.nombre FROM concesionaria WHERE id = id;
 		SELECT concesionaria.nombre INTO new_nombre FROM concesionaria WHERE id = id;
 	ELSE 
 		SET new_nombre = nombre;
 	END IF;
 	IF direccion IS NULL OR direccion='' THEN	
-		-- SET new_direccion = SELECT concesionaria.direccion FROM concesionaria WHERE id = id;
 		SELECT concesionaria.direccion INTO new_direccion FROM concesionaria WHERE id = id;
 	ELSE 
 		SET new_direccion = direccion;

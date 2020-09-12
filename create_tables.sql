@@ -60,9 +60,8 @@ CREATE TABLE `estacion` (
 );
 
 CREATE TABLE `vehiculo` (
-	`num_chasis` INT not null AUTO_INCREMENT,
+	`num_chasis` INT primary key AUTO_INCREMENT,
 	`modelo_id` int not null,
-	primary key (num_chasis, modelo_id), -- primary key por como estaba puesto en el query anterior
 	`pedido_venta_id` int not null,
 	`finalizado` bit not null,
 	foreign key (modelo_id) references modelo(id),
@@ -72,7 +71,7 @@ CREATE TABLE `vehiculo` (
 
 -- tabla X tabla
 
-CREATE TABLE `pedido_insumo` ( -- tecnicamente
+CREATE TABLE `pedido_insumo` (
 	`id` INT PRIMARY KEY AUTO_INCREMENT,
 	`insumo_id` int not null,
 	`proveedor_id` int not null,
