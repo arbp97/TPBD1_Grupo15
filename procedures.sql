@@ -282,10 +282,10 @@ END$$
 -- ESTACIÓNOVICH
 
 DROP PROCEDURE IF EXISTS alta_estacion$$
-CREATE PROCEDURE alta_estacion (linea_montaje int, descripcion varchar(100))
+CREATE PROCEDURE alta_estacion (linea_montaje_id int, descripcion varchar(100))
 BEGIN
-	INSERT INTO estacion(linea_montaje, descripcion)
-	VALUES(linea_montaje, descripcion);
+	INSERT INTO estacion(linea_montaje_id, descripcion)
+	VALUES(linea_montaje_id, descripcion);
 END$$
 
 DROP PROCEDURE IF EXISTS baja_estacion$$
@@ -295,19 +295,19 @@ BEGIN
 END$$
 
 DROP PROCEDURE IF EXISTS mod_estacion$$
-CREATE PROCEDURE mod_estacion(id int, linea_montaje int, descripcion varchar(100))
+CREATE PROCEDURE mod_estacion(id int, linea_montaje_id int, descripcion varchar(100))
 BEGIN
-	DECLARE new_linea_montaje int;
+	DECLARE new_linea_montaje_id int;
     DECLARE new_descripcion varchar(100);
     
-    IF ISNULL(linea_montaje) THEN SELECT linea_montaje INTO new_linea_montaje FROM estacion WHERE id = id;
-    ELSE SET new_linea_montaje = linea_montaje; END IF;
+    IF ISNULL(linea_montaje_id) THEN SELECT linea_montaje_id INTO new_linea_montaje_id FROM estacion WHERE id = id;
+    ELSE SET new_linea_montaje_id = linea_montaje_id; END IF;
     IF ISNULL(descripcion) THEN SELECT descripcion INTO new_descripcion FROM estacion WHERE id = id;
     ELSE SET new_descripcion = descripcion; END IF;
 
     
 	UPDATE estacion SET
-		linea_montaje = new_linea_montaje,
+		linea_montaje_id = new_linea_montaje_id,
 		descripcion = new_descripcion
 	WHERE id = id;
 END$$
