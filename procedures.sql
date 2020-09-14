@@ -313,5 +313,43 @@ BEGIN
 END$$
 
 
+-- DETALLOVICH_VENTA
+
+DROP PROCEDURE IF EXISTS alta_detalle_venta$$
+CREATE PROCEDURE alta_detalle_venta (pedido_venta_id int, modelo_id int, cantidad int)
+BEGIN
+	INSERT INTO detalle_venta(pedido_venta_id, modelo_id, cantidad)
+	VALUES(pedido_venta_id, modelo_id, cantidad);
+END$$
+
+DROP PROCEDURE IF EXISTS baja_detalle_venta$$
+CREATE PROCEDURE baja_detalle_venta(id int)
+BEGIN
+	DELETE FROM detalle_venta WHERE id = id;
+END$$
+
+DROP PROCEDURE IF EXISTS mod_detalle_venta$$
+CREATE PROCEDURE mod_detalle_venta(id int, pedido_venta_id int, modelo_id int, cantidad int)
+BEGIN
+	DECLARE new_pedido_venta_id int;
+    DECLARE new_modelo_id int;
+    DECLARE new_cantidad int;
+    
+    IF ISNULL(pedido_venta_id) THEN SELECT pedido_venta_id INTO new_pedido_venta_id FROM detalle_venta WHERE id = id;
+    ELSE SET new_pedido_venta_id = pedido_venta_id; END IF;
+    IF ISNULL(modelo_id) THEN SELECT modelo_id INTO new_modelo_id FROM detalle_venta WHERE id = id;
+    ELSE SET new_modelo_id = modelo_id; END IF;
+	IF ISNULL(cantidad) THEN SELECT cantidad INTO new_cantidad FROM detalle_venta WHERE id = id;
+    ELSE SET new_cantidad = cantidad; END IF;
+
+
+    
+	UPDATE detalle_venta SET
+		pedido_venta_id = new_pedido_venta_id,
+        modelo_id = new_modelo_id,
+		cantidad = new_cantidad
+	WHERE id = id;
+END$$
+
 DELIMITER ;
 
