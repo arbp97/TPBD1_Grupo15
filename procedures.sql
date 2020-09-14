@@ -128,5 +128,50 @@ DELETE FROM proveedor WHERE id = id;
 
 END$$
 
+-- INSUMO
+						
+DROP PROCEDURE IF EXISTS alta_insumo$$ 
+CREATE PROCEDURE alta_insumo(nombre VARCHAR(100), descripcion VARCHAR(100))
+BEGIN
+
+INSERT INTO insumo(nombre,descripcion)
+VALUES(nombre,descripcion);
+
+END$$
+
+DROP PROCEDURE IF EXISTS mod_insumo$$ 
+CREATE PROCEDURE mod_insumo(id INT, nombre VARCHAR(100), descripcion VARCHAR(100))
+BEGIN
+	
+	DECLARE new_nombre VARCHAR(100);
+	DECLARE new_descripcion VARCHAR(100);
+
+	IF nombre IS NULL OR nombre='' THEN	
+		SELECT insumo.nombre INTO new_nombre FROM insumo WHERE id = id;
+	ELSE 
+		SET new_nombre = nombre;
+	END IF;
+	IF descripcion IS NULL OR descripcion='' THEN	
+		SELECT insumo.descripcion INTO new_descripcion FROM insumo WHERE id = id;
+	ELSE 
+		SET new_descripcion = descripcion;
+	END IF;
+
+UPDATE insumo
+  SET 
+    nombre = new_nombre,
+    descripcion = new_descripcion
+  WHERE id = id;
+
+END$$
+
+DROP PROCEDURE IF EXISTS baja_insumo$$
+CREATE PROCEDURE baja_insumo (id INT)
+BEGIN
+
+DELETE FROM insumo WHERE id = id;
+
+END$$
+
 
 DELIMITER ;
