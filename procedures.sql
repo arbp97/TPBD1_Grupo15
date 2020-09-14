@@ -306,7 +306,7 @@ BEGIN
     ELSE SET new_pedid = pedid; END IF;
 
     
-	UPDATE vehiculo SET
+	UPDATE estacion SET
 		linea_montaje = new_linea_montaje,
 		descripcion = new_descripcion,
 	WHERE num_chasis = id;
