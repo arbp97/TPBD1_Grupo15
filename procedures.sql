@@ -309,7 +309,7 @@ BEGIN
 	UPDATE estacion SET
 		linea_montaje = new_linea_montaje,
 		descripcion = new_descripcion
-	WHERE num_chasis = id;
+	WHERE id = id;
 END$$
 
 
