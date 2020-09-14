@@ -301,9 +301,9 @@ BEGIN
     DECLARE new_descripcion varchar(100);
     
     IF ISNULL(linea_montaje) THEN SELECT linea_montaje INTO new_linea_montaje FROM estacion WHERE id = id;
-    ELSE SET new_modid = modid; END IF;
+    ELSE SET new_linea_montaje = linea_montaje; END IF;
     IF ISNULL(descripcion) THEN SELECT descripcion INTO new_descripcion FROM estacion WHERE id = id;
-    ELSE SET new_pedid = pedid; END IF;
+    ELSE SET new_descripcion = descripcion; END IF;
 
     
 	UPDATE estacion SET
