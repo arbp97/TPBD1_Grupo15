@@ -351,5 +351,41 @@ BEGIN
 	WHERE id = id;
 END$$
 
+--LINEOVICH_MONTAJE
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS alta_linea_montaje$$
+CREATE PROCEDURE alta_linea_montaje (modelo_id int, vehiculos_mes int)
+BEGIN
+	INSERT INTO linea_montaje(modelo_id, vehiculos_mes)
+	VALUES(modelo_id, vehiculos_mes);
+END$$
+
+DROP PROCEDURE IF EXISTS baja_linea_montaje$$
+CREATE PROCEDURE baja_linea_montaje(id int)
+BEGIN
+	DELETE FROM linea_montaje WHERE id = id;
+END$$
+
+DROP PROCEDURE IF EXISTS mod_linea_montaje$$
+CREATE PROCEDURE mod_linea_montaje(id int, vehiculos_mes int,modelo_id int)
+BEGIN
+	DECLARE new_vehiculos_mes int;
+    DECLARE new_modelo_id int;
+    
+    IF ISNULL(vehiculos_mes) THEN SELECT vehiculos_mes INTO new_vehiculos_mes FROM linea_montaje WHERE id = id;
+    ELSE SET new_vehiculos_mes = vehiculos_mes; END IF;
+    IF ISNULL(modelo_id) THEN SELECT modelo_id INTO new_modelo_id FROM linea_montaje WHERE id = id;
+    ELSE SET new_modelo_id = modelo_id; END IF;
+
+    
+	UPDATE linea_montaje SET
+		vehiculos_mes = new_vehiculos_mes,
+        modelo_id = new_modelo_id
+	WHERE id = id;
+END$$
+
+
 DELIMITER ;
 
