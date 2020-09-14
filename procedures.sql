@@ -346,7 +346,7 @@ BEGIN
     
 	UPDATE detalle_venta SET
 		pedido_venta_id = new_pedido_venta_id,
-        modelo_id = new_modelo_id,
+                modelo_id = new_modelo_id,
 		cantidad = new_cantidad
 	WHERE id = id;
 END$$
