@@ -279,5 +279,39 @@ BEGIN
 END$$
 
 
+-- ESTACIÓNOVICH
+
+DROP PROCEDURE IF EXISTS alta_estacion$$
+CREATE PROCEDURE alta_estacion (linea_montaje int, descripcion varchar(100))
+BEGIN
+	INSERT INTO estacion(linea_montaje, descripcion)
+	VALUES(linea_montaje, descripcion);
+END$$
+
+DROP PROCEDURE IF EXISTS baja_estacion$$
+CREATE PROCEDURE baja_estacion(id int)
+BEGIN
+	DELETE FROM estacion WHERE id = id;
+END$$
+
+DROP PROCEDURE IF EXISTS mod_estacion$$
+CREATE PROCEDURE mod_estacion(id int, linea_montaje int, descripcion varchar(100))
+BEGIN
+	DECLARE new_linea_montaje int;
+    DECLARE new_descripcion varchar(100);
+    
+    IF ISNULL(linea_montaje) THEN SELECT linea_montaje INTO new_linea_montaje FROM estacion WHERE id = id;
+    ELSE SET new_modid = modid; END IF;
+    IF ISNULL(descripcion) THEN SELECT descripcion INTO new_descripcion FROM estacion WHERE id = id;
+    ELSE SET new_pedid = pedid; END IF;
+
+    
+	UPDATE vehiculo SET
+		linea_montaje = new_linea_montaje,
+		descripcion = new_descripcion,
+	WHERE num_chasis = id;
+END$$
+
 
 DELIMITER ;
+
