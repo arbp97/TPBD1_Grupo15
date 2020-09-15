@@ -173,11 +173,7 @@ DELETE FROM insumo WHERE id = id;
 
 END$$
 
-
-
--- El Claudio
-
--- ######## Vehi Culo ########
+-- VEHICULO
 
 DROP PROCEDURE IF EXISTS alta_vehiculo$$
 CREATE PROCEDURE alta_vehiculo(modid int, pedid int, finbit BIT)
@@ -210,9 +206,7 @@ BEGIN
 	WHERE num_chasis = id;
 END$$
 
-
-
--- ######## Pedido Insumon ########
+-- PEDIDO_INSUMO
 
 DROP PROCEDURE IF EXISTS alta_pedido_insumo$$
 CREATE PROCEDURE alta_pedido_insumo(insid int, proid int, cant float)
@@ -244,9 +238,7 @@ BEGIN
 	WHERE id = id;
 END$$
 
-
-
--- ######## Vehi Culo Vs. Estacion - Round 1 ########
+-- VEHICULO_X_ESTACION
 
 DROP PROCEDURE IF EXISTS alta_vehiculo_x_estacion$$
 CREATE PROCEDURE alta_vehiculo_x_estacion(estid int, indate datetime, outdate datetime)
@@ -279,7 +271,7 @@ BEGIN
 END$$
 
 
--- ESTACIÓNOVICH
+-- ESTACIÓN
 
 DROP PROCEDURE IF EXISTS alta_estacion$$
 CREATE PROCEDURE alta_estacion (linea_montaje_id int, descripcion varchar(100))
@@ -313,7 +305,7 @@ BEGIN
 END$$
 
 
--- DETALLOVICH_VENTA
+-- DETALLE_VENTA
 
 DROP PROCEDURE IF EXISTS alta_detalle_venta$$
 CREATE PROCEDURE alta_detalle_venta (pedido_venta_id int, modelo_id int, cantidad int)
@@ -351,9 +343,35 @@ BEGIN
 	WHERE id = id;
 END$$
 
---LINEOVICH_MONTAJE
+-- PEDIDO_VENTA
 
-DELIMITER $$
+DROP PROCEDURE IF EXISTS alta_pedido_venta$$
+CREATE PROCEDURE alta_pedido_venta (concesionaria_id INT)
+BEGIN
+	INSERT INTO pedido_venta(concesionaria_id)
+	VALUES(concesionaria_id);
+END$$
+
+DROP PROCEDURE IF EXISTS baja_pedido_venta$$
+CREATE PROCEDURE baja_pedido_venta(id int)
+BEGIN
+	DELETE FROM pedido_venta WHERE id = id;
+END$$
+
+DROP PROCEDURE IF EXISTS mod_pedido_venta$$
+CREATE PROCEDURE mod_pedido_venta(id int, concesionaria_id int)
+BEGIN
+	DECLARE new_concesionaria_id int;
+    
+    IF ISNULL(concesionaria_id) THEN SELECT concesionaria_id INTO new_concesionaria_id FROM pedido_venta WHERE id = id;
+    ELSE SET new_concesionaria_id = concesionaria_id; END IF;
+    
+	UPDATE pedido_venta SET
+		concesionaria_id = new_concesionaria_id
+	WHERE id = id;
+END$$
+
+-- LINEA_MONTAJE
 
 DROP PROCEDURE IF EXISTS alta_linea_montaje$$
 CREATE PROCEDURE alta_linea_montaje (modelo_id int, vehiculos_mes int)
