@@ -2,6 +2,10 @@ DELIMITER $$
 
 -- CONCESIONARIA
 
+/*
+ *
+*/
+
 DROP PROCEDURE IF EXISTS alta_concesionaria$$ 
 CREATE PROCEDURE alta_concesionaria(nombre VARCHAR(100), direccion VARCHAR(100))
 BEGIN
@@ -18,12 +22,12 @@ BEGIN
 	DECLARE new_nombre VARCHAR(100);
 	DECLARE new_direccion VARCHAR(100);
 
-	IF nombre IS NULL OR nombre='' THEN	
+	IF nombre IS NULL OR nombre='' THEN	-- PASAR A TRIGGER
 		SELECT concesionaria.nombre INTO new_nombre FROM concesionaria WHERE id = id;
 	ELSE 
 		SET new_nombre = nombre;
 	END IF;
-	IF direccion IS NULL OR direccion='' THEN	
+	IF direccion IS NULL OR direccion='' THEN	-- SAME
 		SELECT concesionaria.direccion INTO new_direccion FROM concesionaria WHERE id = id;
 	ELSE 
 		SET new_direccion = direccion;
@@ -50,29 +54,32 @@ END$$
 DROP PROCEDURE IF EXISTS alta_modelo$$ 
 CREATE PROCEDURE alta_modelo(nombre VARCHAR(100), cantidad_estaciones INT)
 BEGIN
+	
+
+DECLARE modelo_id INT;
+DECLARE linea_montaje_id INT;
+DECLARE nInsertados INT;
+
 
 INSERT INTO modelo(nombre)
 VALUES(nombre);
 
-DECLARE modelo_id INT;
-SELECT modelo.id INTO modelo_id FROM modelo ORDER BY id DESC LIMIT 1;
+SELECT MAX(id) INTO modelo_id FROM modelo; -- ultima id cargada MAX(id)
 
 CALL alta_linea_montaje(modelo_id);
 
-DECLARE linea_montaje_id INT;
-SELECT linea_montaje.id INTO linea_montaje_id FROM linea_montaje ORDER BY id DESC LIMIT 1;
+SELECT MAX(id) INTO linea_montaje_id FROM linea_montaje;
 
-DECLARE nInsertados INT;
 
 SET nInsertados = 0;
 
-WHILE nInsertados < cantidad_estaciones DO
-
-	call alta_estacion(linea_montaje_id, 'add description');
-
-	SET nInsertados = nInsertados + 1;
+	WHILE nInsertados < cantidad_estaciones DO
 	
-END WHILE;
+		CALL alta_estacion(linea_montaje_id, 'add description');
+	
+		SET nInsertados = nInsertados + 1;
+		
+	END WHILE;
 
 END$$
 
@@ -422,6 +429,58 @@ BEGIN
 		vehiculos_mes = new_vehiculos_mes,
         modelo_id = new_modelo_id
 	WHERE id = id;
+END$$
+
+
+-- BUSINESS
+
+DROP PROCEDURE IF EXISTS comenzar_ensamblado$$
+CREATE PROCEDURE comenzar_ensamblado(pedido_venta_id_param INT)
+BEGIN
+	
+	DECLARE finished TINYINT DEFAULT 0;
+	DECLARE pedido_venta_id_param INT;
+	DECLARE num_chasis INT;
+	DECLARE fecha_ingreso DATETIME;
+	
+	DECLARE modelo_id_param INT;
+	DECLARE cantidad INT; 
+	
+	DECLARE nInsertados INT;
+
+	DECLARE cursor_detalle_venta
+        CURSOR FOR
+            SELECT modelo_id, cantidad FROM detalle_venta WHERE pedido_venta_id = pedido_venta_id_param;
+ 	
+    DECLARE CONTINUE HANDLER
+        FOR NOT FOUND SET finished = 1;
+       
+    
+    OPEN cursor_detalle_venta;
+   
+    getDetalle: LOOP
+
+        FETCH cursor_detalle_venta INTO modelo_id_param, cantidad;
+
+        IF finished = 1 THEN
+            LEAVE getDetalle;
+        END IF;
+
+	SET nInsertados = 0;
+
+		WHILE nInsertados < cantidad DO
+	
+		CALL alta_vehiculo(modelo_id_param, pedido_venta_id_param, '0');
+	
+		SET nInsertados = nInsertados  +1;
+	
+		END WHILE;
+
+    END LOOP getDetalle;
+
+-- Elimino el cursor de memoria
+
+    CLOSE cursor_detalle_venta;
 END$$
 
 
