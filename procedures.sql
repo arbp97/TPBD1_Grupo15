@@ -48,11 +48,31 @@ END$$
 -- MODELO
 
 DROP PROCEDURE IF EXISTS alta_modelo$$ 
-CREATE PROCEDURE alta_modelo(nombre VARCHAR(100))
+CREATE PROCEDURE alta_modelo(nombre VARCHAR(100), cantidad_estaciones INT)
 BEGIN
 
 INSERT INTO modelo(nombre)
 VALUES(nombre);
+
+DECLARE modelo_id INT;
+SELECT modelo.id INTO modelo_id FROM modelo ORDER BY id DESC LIMIT 1;
+
+CALL alta_linea_montaje(modelo_id);
+
+DECLARE linea_montaje_id INT;
+SELECT linea_montaje.id INTO linea_montaje_id FROM linea_montaje ORDER BY id DESC LIMIT 1;
+
+DECLARE nInsertados INT;
+
+SET nInsertados = 0;
+
+WHILE nInsertados < cantidad_estaciones DO
+
+	call alta_estacion(linea_montaje_id, 'add description');
+
+	SET nInsertados = nInsertados + 1;
+	
+END WHILE;
 
 END$$
 
@@ -374,10 +394,10 @@ END$$
 -- LINEA_MONTAJE
 
 DROP PROCEDURE IF EXISTS alta_linea_montaje$$
-CREATE PROCEDURE alta_linea_montaje (modelo_id int, vehiculos_mes int)
+CREATE PROCEDURE alta_linea_montaje (modelo_id int)
 BEGIN
 	INSERT INTO linea_montaje(modelo_id, vehiculos_mes)
-	VALUES(modelo_id, vehiculos_mes);
+	VALUES(modelo_id, 0);
 END$$
 
 DROP PROCEDURE IF EXISTS baja_linea_montaje$$
