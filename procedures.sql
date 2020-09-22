@@ -1,10 +1,14 @@
 DELIMITER $$
 
--- CONCESIONARIA
+-- DEBUG / ignore
 
-/*
- *
-*/
+DROP PROCEDURE IF EXISTS log_msg$$
+CREATE PROCEDURE log_msg(msg VARCHAR(255))
+BEGIN
+    insert into logs select 0, msg;
+END$$
+
+-- CONCESIONARIA
 
 DROP PROCEDURE IF EXISTS alta_concesionaria$$ 
 CREATE PROCEDURE alta_concesionaria(nombre VARCHAR(100), direccion VARCHAR(100))
@@ -435,50 +439,44 @@ END$$
 -- BUSINESS
 
 DROP PROCEDURE IF EXISTS comenzar_ensamblado$$
-CREATE PROCEDURE comenzar_ensamblado(pedido_venta_id_param INT)
+CREATE PROCEDURE comenzar_ensamblado(pedido_venta_id INT)
 BEGIN
-	
-	DECLARE finished TINYINT DEFAULT 0;
-	DECLARE pedido_venta_id_param INT;
-	DECLARE num_chasis INT;
-	DECLARE fecha_ingreso DATETIME;
-	
-	DECLARE modelo_id_param INT;
-	DECLARE cantidad INT; 
-	
+
+	DECLARE finished INT DEFAULT 0;
+	DECLARE nCantidad INT; 
+	DECLARE nModelo_id INT;
 	DECLARE nInsertados INT;
 
 	DECLARE cursor_detalle_venta
         CURSOR FOR
-            SELECT modelo_id, cantidad FROM detalle_venta WHERE pedido_venta_id = pedido_venta_id_param;
+            SELECT modelo_id, cantidad FROM detalle_venta WHERE detalle_venta.pedido_venta_id = pedido_venta_id;
  	
     DECLARE CONTINUE HANDLER
         FOR NOT FOUND SET finished = 1;
        
-    
+    -- CALL log_msg('help'); 
+  
     OPEN cursor_detalle_venta;
    
     getDetalle: LOOP
 
-        FETCH cursor_detalle_venta INTO modelo_id_param, cantidad;
-
+        FETCH cursor_detalle_venta INTO nModelo_id, nCantidad;
+      	
         IF finished = 1 THEN
             LEAVE getDetalle;
-        END IF;
+		END IF;
 
-	SET nInsertados = 0;
+		SET nInsertados = 0;
 
-		WHILE nInsertados < cantidad DO
+		WHILE nInsertados < nCantidad DO
+		
+		CALL alta_vehiculo(nModelo_id, pedido_venta_id, 0);
 	
-		CALL alta_vehiculo(modelo_id_param, pedido_venta_id_param, '0');
-	
-		SET nInsertados = nInsertados  +1;
+		SET nInsertados = nInsertados + 1;
 	
 		END WHILE;
 
     END LOOP getDetalle;
-
--- Elimino el cursor de memoria
 
     CLOSE cursor_detalle_venta;
 END$$

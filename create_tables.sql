@@ -2,6 +2,13 @@ drop database if exists automotriz;
 create database if not exists automotriz;
 use automotriz;
 
+-- DEBUG / ignore
+
+CREATE TABLE `logs` (
+	`id` INT primary key AUTO_INCREMENT,
+	`msg` VARCHAR(255)
+);
+
 -- Tablas base
 
 CREATE TABLE `concesionaria` (
@@ -33,6 +40,8 @@ CREATE TABLE `insumo` (
 CREATE TABLE `pedido_venta` (
 	`id` INT primary key AUTO_INCREMENT,
 	`concesionaria_id` int not null,
+	`fecha_entrega` date,
+	`finalizado` bit not null,
 	foreign key (concesionaria_id) references concesionaria(id)
 );
 
