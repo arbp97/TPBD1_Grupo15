@@ -215,7 +215,18 @@ END$$
 DROP PROCEDURE IF EXISTS baja_vehiculo$$
 CREATE PROCEDURE baja_vehiculo(id int)
 BEGIN
-	DELETE FROM vehiculo WHERE num_chasis = id;
+	DECLARE C INT DEFAULT 0;
+	DECLARE RES INT DEFAULT 0;
+    DECLARE MSG VARCHAR(69) DEFAULT "";
+    SELECT COUNT(num_chasis) INTO C FROM vehiculo WHERE vehiculo.num_chasis = id;
+    IF (C = 0) THEN
+		SET RES = -69;
+        SET MSG = "Pero eso no existe, pelotudo";
+		-- SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Pero eso no existe, pelotudo';
+	ELSE
+		DELETE FROM vehiculo WHERE num_chasis = id;
+    END IF;
+    SELECT RES AS nResultado, MSG as cMensaje;
 END$$
 DROP PROCEDURE IF EXISTS mod_vehiculo$$
 CREATE PROCEDURE mod_vehiculo(id int, modid int, pedid int, finbit BIT)
@@ -248,7 +259,17 @@ END$$
 DROP PROCEDURE IF EXISTS baja_pedido_insumo$$
 CREATE PROCEDURE baja_pedido_insumo(id int)
 BEGIN
-	DELETE FROM pedido_insumo WHERE id = id;
+	DECLARE C INT DEFAULT 0;
+	DECLARE RES INT DEFAULT 0;
+    DECLARE MSG VARCHAR(69) DEFAULT "";
+    SELECT COUNT(id) INTO C FROM pedido_insumo WHERE id = id;
+    IF (C = 0) THEN
+		SET RES = -420;
+        SET MSG = "No se encontraron pedido_insumos con esa ID";
+	ELSE
+		DELETE FROM pedido_insumo WHERE id = id;
+    END IF;
+    SELECT RES AS nResultado, MSG as cMensaje;
 END$$
 DROP PROCEDURE IF EXISTS mod_pedido_insumo$$
 CREATE PROCEDURE mod_pedido_insumo(id int, insid int, proid int, cant float)
@@ -272,33 +293,47 @@ END$$
 -- VEHICULO_X_ESTACION
 
 DROP PROCEDURE IF EXISTS alta_vehiculo_x_estacion$$
-CREATE PROCEDURE alta_vehiculo_x_estacion(estid int, indate datetime, outdate datetime)
+CREATE PROCEDURE alta_vehiculo_x_estacion(chaid int, estid int, indate datetime, outdate datetime)
 BEGIN
-	INSERT INTO vehiculo_x_estacion(estacion_id, fecha_ingreso, fecha_egreso)
-	VALUES(estid,indate,outdate);
+	INSERT INTO vehiculo_x_estacion(vehiculo_num_chasis, estacion_id, fecha_ingreso, fecha_egreso)
+	VALUES(chaid,estid,indate,outdate);
 END$$
 DROP PROCEDURE IF EXISTS baja_vehiculo_x_estacion$$
-CREATE PROCEDURE baja_vehiculo_x_estacion(id int)
+CREATE PROCEDURE baja_vehiculo_x_estacion(chasisid int, stationid int)
 BEGIN
-	DELETE FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = id;
+	DECLARE C INT DEFAULT 0;
+	DECLARE RES INT DEFAULT 0;
+    DECLARE MSG VARCHAR(69) DEFAULT "";
+    SELECT COUNT(id) INTO C FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = chasisid AND estacion_id = stationid;
+    IF (C = 0) THEN
+		SET RES = -666;
+        SET MSG = "No se encuentran resultados para el par de IDs";
+	ELSE
+		-- DELETE FROM pedido_insumo WHERE id = id;
+        DELETE FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = chasisid AND estacion_id = stationid;
+    END IF;
+    SELECT RES AS nResultado, MSG as cMensaje;
 END$$
 DROP PROCEDURE IF EXISTS mod_vehiculo_x_estacion$$
-CREATE PROCEDURE mod_vehiculo_x_estacion(id int, estid int, indate datetime, outdate datetime)
+CREATE PROCEDURE mod_vehiculo_x_estacion(oldcarid int, oldestid int, nextcarid int, nextestid int, indate datetime, outdate datetime)
 BEGIN
-	DECLARE new_estid int;
+	-- oldX: Se modificara la entrada que tenga este par de PKs
+    -- newX: Si se modifica el valor de alguna PK, a cual
+	DECLARE new_estid,new_carid int;
     DECLARE new_indate,new_outdate datetime;
     
-    IF ISNULL(estid) THEN SELECT estacion_id INTO new_estid FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = id;
-    ELSE SET new_estid = estid; END IF;
+    IF ISNULL(nextcarid) THEN SET new_carid = oldcarid; ELSE SET new_carid = nextcarid; END IF;
+    IF ISNULL(nextestid) THEN SET new_estid = oldestid; ELSE SET new_estid = nextestid; END IF;
     IF ISNULL(indate) THEN SELECT fecha_ingreso INTO new_indate FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = id;
     ELSE SET new_indate = indate; END IF;
     -- No hay chequeo para outdate - este puede ser nulo
     
 	UPDATE vehiculo_x_estacion SET
+		vehiculo_num_chasis = new_carid,
 		estacion_id = new_estid,
 		fecha_ingreso = new_indate,
 		fecha_egreso = new_outdate
-	WHERE vehiculo_num_chasis = id;
+	WHERE vehiculo_num_chasis = oldcarid AND estacion_id = oldestid;
 END$$
 
 
