@@ -349,7 +349,25 @@ END$$
 DROP PROCEDURE IF EXISTS baja_estacion$$
 CREATE PROCEDURE baja_estacion(id int)
 BEGIN
-	DELETE FROM estacion WHERE id = id;
+
+    DECLARE C INT DEFAULT 0;
+    DECLARE RES INT DEFAULT 0;
+    DECLARE MSG VARCHAR(100) DEFAULT "";
+
+    SELECT COUNT(id) INTO C FROM estacion WHERE id=id;
+
+    IF (C = 0) THEN
+
+	SET RES = -404;
+        SET MSG = "No se encuentran resultados para ese ID";
+
+	ELSE
+	
+        DELETE FROM estacion WHERE id=id;
+
+    END IF;
+
+    SELECT RES AS nResultado, MSG as cMensaje;
 END$$
 
 DROP PROCEDURE IF EXISTS mod_estacion$$
