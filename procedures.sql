@@ -574,22 +574,40 @@ DROP PROCEDURE IF EXISTS mod_vehiculo_x_estacion$$
 CREATE PROCEDURE mod_vehiculo_x_estacion(oldcarid int, oldestid int, nextcarid int, nextestid int, indate datetime, outdate datetime)
 BEGIN
 	-- oldX: Se modificara la entrada que tenga este par de PKs
-    -- newX: Si se modifica el valor de alguna PK, a cual
+	-- newX: Si se modifica el valor de alguna PK, a cual
 	DECLARE new_estid,new_carid int;
-    DECLARE new_indate,new_outdate datetime;
+	DECLARE new_indate,new_outdate datetime;
     
-    IF ISNULL(nextcarid) THEN SET new_carid = oldcarid; ELSE SET new_carid = nextcarid; END IF;
-    IF ISNULL(nextestid) THEN SET new_estid = oldestid; ELSE SET new_estid = nextestid; END IF;
-    IF ISNULL(indate) THEN SELECT fecha_ingreso INTO new_indate FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = id;
-    ELSE SET new_indate = indate; END IF;
+	IF ISNULL(nextcarid) THEN
+
+                  SET new_carid = oldcarid; ELSE SET new_carid = nextcarid; 
+	END IF;
+
+	IF ISNULL(nextestid) THEN 
+
+                 SET new_estid = oldestid; ELSE SET new_estid = nextestid; 
+
+	END IF;
+
+	IF ISNULL(indate) THEN 
+
+                 SELECT fecha_ingreso INTO new_indate FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = id;
+
+	ELSE 
+
+                 SET new_indate = indate; 
+
+	END IF;
+
     -- No hay chequeo para outdate - este puede ser nulo
     
 	UPDATE vehiculo_x_estacion SET
-		vehiculo_num_chasis = new_carid,
-		estacion_id = new_estid,
-		fecha_ingreso = new_indate,
-		fecha_egreso = new_outdate
+                 vehiculo_num_chasis = new_carid,
+		 estacion_id = new_estid,
+		 fecha_ingreso = new_indate,
+		 fecha_egreso = new_outdate
 	WHERE vehiculo_num_chasis = oldcarid AND estacion_id = oldestid;
+
 END$$
 
 
@@ -598,50 +616,70 @@ END$$
 DROP PROCEDURE IF EXISTS alta_estacion$$
 CREATE PROCEDURE alta_estacion (linea_montaje_id int, descripcion varchar(100))
 BEGIN
+
 	INSERT INTO estacion(linea_montaje_id, descripcion)
 	VALUES(linea_montaje_id, descripcion);
+
 END$$
 
 DROP PROCEDURE IF EXISTS baja_estacion$$
 CREATE PROCEDURE baja_estacion(id int)
 BEGIN
 
-    DECLARE C INT DEFAULT 0;
-    DECLARE RES INT DEFAULT 0;
-    DECLARE MSG VARCHAR(100) DEFAULT "";
+	DECLARE C INT DEFAULT 0;
+	DECLARE RES INT DEFAULT 0;
+	DECLARE MSG VARCHAR(100) DEFAULT "";
 
-    SELECT COUNT(id) INTO C FROM estacion WHERE id=id;
+	SELECT COUNT(id) INTO C FROM estacion WHERE id=id;
 
-    IF (C = 0) THEN
+	IF (C = 0) THEN
 
-	SET RES = -404;
-        SET MSG = "No se encuentran resultados para ese ID";
+		 SET RES = -404;
+		 SET MSG = "No se encuentran resultados para ese ID";
 
 	ELSE
 	
-        DELETE FROM estacion WHERE id=id;
+		 DELETE FROM estacion WHERE id=id;
 
-    END IF;
+	END IF;
 
-    SELECT RES AS nResultado, MSG as cMensaje;
+		 SELECT RES AS nResultado, MSG as cMensaje;
+
 END$$
 
 DROP PROCEDURE IF EXISTS mod_estacion$$
 CREATE PROCEDURE mod_estacion(id int, linea_montaje_id int, descripcion varchar(100))
 BEGIN
+
 	DECLARE new_linea_montaje_id int;
-    DECLARE new_descripcion varchar(100);
+	DECLARE new_descripcion varchar(100);
     
-    IF ISNULL(linea_montaje_id) THEN SELECT linea_montaje_id INTO new_linea_montaje_id FROM estacion WHERE id = id;
-    ELSE SET new_linea_montaje_id = linea_montaje_id; END IF;
-    IF ISNULL(descripcion) THEN SELECT descripcion INTO new_descripcion FROM estacion WHERE id = id;
-    ELSE SET new_descripcion = descripcion; END IF;
+	IF ISNULL(linea_montaje_id) THEN
+
+		 SELECT linea_montaje_id INTO new_linea_montaje_id FROM estacion WHERE id = id;
+
+	ELSE 
+
+		 SET new_linea_montaje_id = linea_montaje_id; 
+
+	END IF;
+
+	IF ISNULL(descripcion) THEN
+
+ 		 SELECT descripcion INTO new_descripcion FROM estacion WHERE id = id;
+
+	ELSE 
+
+		 SET new_descripcion = descripcion; 
+
+	END IF;
 
     
 	UPDATE estacion SET
-		linea_montaje_id = new_linea_montaje_id,
-		descripcion = new_descripcion
+		 linea_montaje_id = new_linea_montaje_id,
+		 descripcion = new_descripcion
 	WHERE id = id;
+
 END$$
 
 
@@ -650,29 +688,53 @@ END$$
 DROP PROCEDURE IF EXISTS alta_detalle_venta$$
 CREATE PROCEDURE alta_detalle_venta (pedido_venta_id int, modelo_id int, cantidad int)
 BEGIN
+
 	INSERT INTO detalle_venta(pedido_venta_id, modelo_id, cantidad)
 	VALUES(pedido_venta_id, modelo_id, cantidad);
+
 END$$
 
 DROP PROCEDURE IF EXISTS baja_detalle_venta$$
 CREATE PROCEDURE baja_detalle_venta(id int)
 BEGIN
+
 	DELETE FROM detalle_venta WHERE id = id;
+
 END$$
 
 DROP PROCEDURE IF EXISTS mod_detalle_venta$$
 CREATE PROCEDURE mod_detalle_venta(id int, pedido_venta_id int, modelo_id int, cantidad int)
 BEGIN
+
 	DECLARE new_pedido_venta_id int;
-    DECLARE new_modelo_id int;
-    DECLARE new_cantidad int;
+	DECLARE new_modelo_id int;
+	DECLARE new_cantidad int;
     
-    IF ISNULL(pedido_venta_id) THEN SELECT pedido_venta_id INTO new_pedido_venta_id FROM detalle_venta WHERE id = id;
-    ELSE SET new_pedido_venta_id = pedido_venta_id; END IF;
-    IF ISNULL(modelo_id) THEN SELECT modelo_id INTO new_modelo_id FROM detalle_venta WHERE id = id;
-    ELSE SET new_modelo_id = modelo_id; END IF;
-	IF ISNULL(cantidad) THEN SELECT cantidad INTO new_cantidad FROM detalle_venta WHERE id = id;
-    ELSE SET new_cantidad = cantidad; END IF;
+	IF ISNULL(pedido_venta_id) THEN 
+		 SELECT pedido_venta_id INTO new_pedido_venta_id FROM detalle_venta WHERE id = id;
+	ELSE 
+		 SET new_pedido_venta_id = pedido_venta_id; 
+	END IF;
+
+	IF ISNULL(modelo_id) THEN 
+
+		 SELECT modelo_id INTO new_modelo_id FROM detalle_venta WHERE id = id;
+
+	ELSE 
+
+		 SET new_modelo_id = modelo_id; 
+
+	END IF;
+
+	IF ISNULL(cantidad) THEN 
+
+		 SELECT cantidad INTO new_cantidad FROM detalle_venta WHERE id = id;
+
+	ELSE 
+
+		 SET new_cantidad = cantidad; 
+
+	END IF;
 
 
     
@@ -681,6 +743,7 @@ BEGIN
                 modelo_id = new_modelo_id,
 		cantidad = new_cantidad
 	WHERE id = id;
+
 END$$
 
 -- PEDIDO_VENTA
@@ -688,27 +751,40 @@ END$$
 DROP PROCEDURE IF EXISTS alta_pedido_venta$$
 CREATE PROCEDURE alta_pedido_venta (concesionaria_id INT)
 BEGIN
+
 	INSERT INTO pedido_venta(concesionaria_id)
 	VALUES(concesionaria_id);
+
 END$$
 
 DROP PROCEDURE IF EXISTS baja_pedido_venta$$
 CREATE PROCEDURE baja_pedido_venta(id int)
 BEGIN
+
 	DELETE FROM pedido_venta WHERE id = id;
+
 END$$
 
 DROP PROCEDURE IF EXISTS mod_pedido_venta$$
 CREATE PROCEDURE mod_pedido_venta(id int, concesionaria_id int)
 BEGIN
+
 	DECLARE new_concesionaria_id int;
     
-    IF ISNULL(concesionaria_id) THEN SELECT concesionaria_id INTO new_concesionaria_id FROM pedido_venta WHERE id = id;
-    ELSE SET new_concesionaria_id = concesionaria_id; END IF;
+	IF ISNULL(concesionaria_id) THEN 
+
+                SELECT concesionaria_id INTO new_concesionaria_id FROM pedido_venta WHERE id = id;
+
+	ELSE 
+
+                SET new_concesionaria_id = concesionaria_id; 
+
+	END IF;
     
 	UPDATE pedido_venta SET
 		concesionaria_id = new_concesionaria_id
 	WHERE id = id;
+
 END$$
 
 -- LINEA_MONTAJE
@@ -730,18 +806,25 @@ DROP PROCEDURE IF EXISTS mod_linea_montaje$$
 CREATE PROCEDURE mod_linea_montaje(id int, vehiculos_mes int,modelo_id int)
 BEGIN
 	DECLARE new_vehiculos_mes int;
-    DECLARE new_modelo_id int;
+	DECLARE new_modelo_id int;
     
-    IF ISNULL(vehiculos_mes) THEN SELECT vehiculos_mes INTO new_vehiculos_mes FROM linea_montaje WHERE id = id;
-    ELSE SET new_vehiculos_mes = vehiculos_mes; END IF;
-    IF ISNULL(modelo_id) THEN SELECT modelo_id INTO new_modelo_id FROM linea_montaje WHERE id = id;
-    ELSE SET new_modelo_id = modelo_id; END IF;
+	IF ISNULL(vehiculos_mes) THEN 
+		SELECT vehiculos_mes INTO new_vehiculos_mes FROM linea_montaje WHERE id = id;
+	ELSE 
+		SET new_vehiculos_mes = vehiculos_mes; 
+	END IF;
 
-    
+	IF ISNULL(modelo_id) THEN 
+		SELECT modelo_id INTO new_modelo_id FROM linea_montaje WHERE id = id;
+	ELSE 
+		SET new_modelo_id = modelo_id; 
+	END IF;
+   
 	UPDATE linea_montaje SET
 		vehiculos_mes = new_vehiculos_mes,
-        modelo_id = new_modelo_id
+		modelo_id = new_modelo_id
 	WHERE id = id;
+
 END$$
 
 
@@ -760,7 +843,7 @@ BEGIN
         CURSOR FOR
             SELECT modelo_id, cantidad FROM detalle_venta WHERE detalle_venta.pedido_venta_id = pedido_venta_id;
  	
-    DECLARE CONTINUE HANDLER
+	DECLARE CONTINUE HANDLER
         FOR NOT FOUND SET finished = 1;
        
     -- CALL log_msg('help'); 
