@@ -151,39 +151,13 @@ proc: BEGIN
 
 	SELECT COUNT(id) INTO nCount FROM modelo WHERE modelo.id = nId;
     IF (nCount = 0) THEN
-		SET nResultado = -1;
-        SET cMensaje = "Modelo inexistente";
-	ELSE
-		DELETE FROM modelo WHERE id = nId;
+		CALL throwMsg(-1, "Modelo inexistente");
+        LEAVE proc;
 	END IF;
+    
+	DELETE FROM modelo WHERE id = nId;
 
-	SELECT nResultado AS Resultado, cMensaje AS Mensaje;
-END $$
-
--- PROVEEDOR ------------------------------------------------------------------------
-
-DROP PROCEDURE IF EXISTS alta_proveedor $$ 
-CREATE PROCEDURE alta_proveedor(cNombre VARCHAR(100), cRubro VARCHAR(100))
-proc: BEGIN
-
-	DECLARE cMensaje VARCHAR(100) DEFAULT "";
-	DECLARE nResultado INT DEFAULT 0;
-
-	IF cNombre IS NULL OR cNombre='' THEN	
-		SET nResultado = -1;
-		SET cMensaje = "Inserte un nombre para el proveedor";
-	END IF;
-	IF cRubro IS NULL OR cRubro='' THEN	
-		SET nResultado = -1;
-		SET cMensaje = "Inserte un rubro para el proveedor";
-	END IF;
-
-	IF (nResultado = 0) THEN
-		INSERT INTO proveedor(nombre,rubro)
-		VALUES(cNombre,cRubro);
-	END IF;
-
-	SELECT nResultado AS Resultado, cMensaje AS Mensaje;
+	CALL throwMsg(0, "");
 END $$
 
 DROP PROCEDURE IF EXISTS mod_proveedor $$ 
@@ -193,57 +167,48 @@ proc: BEGIN
 	DECLARE nCount INT DEFAULT 0;
 	DECLARE cNewNombre VARCHAR(100);
 	DECLARE cNewRubro VARCHAR(100);
-	DECLARE cMensaje VARCHAR(100) DEFAULT "";
-	DECLARE nResultado INT DEFAULT 0;
 
 	SELECT COUNT(id) INTO nCount FROM proveedor WHERE proveedor.id = nId;
 	IF (nCount = 0) THEN
-    
-		SET nResultado = -1;
-		SET cMensaje = "Proveedor no existe con esa ID";
-        
-	ELSE
-		IF cNombre IS NULL OR cNombre='' THEN	
-		SELECT proveedor.nombre INTO cNewNombre FROM proveedor WHERE id = nId;
-		ELSE 
-			SET cNewNombre = cNombre;
-		END IF;
-		IF cRubro IS NULL OR cRubro='' THEN	
-			SELECT proveedor.rubro INTO cNewRubro FROM proveedor WHERE id = nId;
-		ELSE 
-			SET cNewRubro = cRubro;
-		END IF;
-
-		UPDATE proveedor
-		SET 
-			nombre = cNewNombre,
-			rubro = cNewRubro
-		WHERE id = nId;
-
+		CALL throwMsg(-1, "No existe proveedor con ID dada");
+        LEAVE proc;
 	END IF;
+    
+	IF cNombre IS NULL OR cNombre='' THEN	
+		SELECT proveedor.nombre INTO cNewNombre FROM proveedor WHERE id = nId;
+	ELSE 
+		SET cNewNombre = cNombre;
+	END IF;
+    
+	IF cRubro IS NULL OR cRubro='' THEN	
+		SELECT proveedor.rubro INTO cNewRubro FROM proveedor WHERE id = nId;
+	ELSE 
+		SET cNewRubro = cRubro;
+	END IF;
+	
+	UPDATE proveedor
+	SET 
+		nombre = cNewNombre,
+		rubro = cNewRubro
+	WHERE id = nId;
 
-	SELECT nResultado AS Resultado, cMensaje AS Mensaje;
+	CALL throwMsg(0, "");
 END $$
 
 DROP PROCEDURE IF EXISTS baja_proveedor $$
 CREATE PROCEDURE baja_proveedor (nId INT)
 proc: BEGIN
-
 	DECLARE nCount INT DEFAULT 0;
-	DECLARE cMensaje VARCHAR(100) DEFAULT "";
-	DECLARE nResultado INT DEFAULT 0;
 
 	SELECT COUNT(id) INTO nCount FROM proveedor WHERE proveedor.id = nId;
 	IF (nCount = 0) THEN
-		SET nResultado = -1;
-		SET cMensaje = "Proveedor no existe con esa ID";
-	ELSE
-
-		DELETE FROM proveedor WHERE id = nId;
-
+		CALL throwMsg(0, "No existe proveedor con ID dada");
+		LEAVE proc;
 	END IF;
+    
+	DELETE FROM proveedor WHERE id = nId;
 
-	SELECT nResultado AS Resultado, cMensaje AS Mensaje;
+	CALL throwMsg(0, "");
 END $$
 
 -- INSUMO ---------------------------------------------------------------------------------
@@ -252,83 +217,64 @@ DROP PROCEDURE IF EXISTS alta_insumo $$
 CREATE PROCEDURE alta_insumo(cNombre VARCHAR(100), cDescripcion VARCHAR(100))
 proc: BEGIN
 
-	DECLARE cMensaje VARCHAR(100) DEFAULT "";
-	DECLARE nResultado INT DEFAULT 0;
-
 	IF cNombre IS NULL OR cNombre='' THEN	
-		SET nResultado = -1;
-		SET cMensaje = "Inserte un nombre para el insumo";
+		CALL throwMsg(0, "Inserte un nombre para el insumo");
+        LEAVE proc;
 	END IF;
+    
+	INSERT INTO insumo(nombre,descripcion)
+	VALUES(cNombre,cDescripcion);
 
-	IF (nResultado = 0) THEN
-		INSERT INTO insumo(nombre,descripcion)
-		VALUES(cNombre,cDescripcion);
-	END IF;
-
-	SELECT nResultado AS Resultado, cMensaje AS Mensaje;
+	CALL throwMsg(0, "");
 END $$
 
 DROP PROCEDURE IF EXISTS mod_insumo $$
 CREATE PROCEDURE mod_insumo(nId INT, cNombre VARCHAR(100), cDescripcion VARCHAR(100))
 proc: BEGIN
-	
 	DECLARE cNewNombre VARCHAR(100);
 	DECLARE cNewDescripcion VARCHAR(100);
 	DECLARE nCount INT DEFAULT 0;
-	DECLARE cMensaje VARCHAR(100) DEFAULT "";
-	DECLARE nResultado INT DEFAULT 0;
 
 	SELECT COUNT(id) INTO nCount FROM insumo WHERE insumo.id = nId;
 	IF (nCount = 0) THEN
-
-		SET nResultado = -1;
-		SET cMensaje = "Insumo no existe con esa ID";
-
-	ELSE
+		CALL throwMsg(-1, "No existe insumo con la ID dada");
+		LEAVE proc;
+	END IF;
     
-		IF cNombre IS NULL OR cNombre='' THEN	
-			SELECT insumo.nombre INTO cNewNombre FROM insumo WHERE id = nId;
-		ELSE 
-			SET cNewNombre = cNombre;
-		END IF;
-		IF cDescripcion IS NULL OR cDescripcion='' THEN	
-			SELECT insumo.descripcion INTO cNewDescripcion FROM insumo WHERE id = nId;
-		ELSE 
-			SET cNewDescripcion = cDescripcion;
-		END IF;
-
-		UPDATE insumo
-		SET 
-			nombre = cNewNombre,
-			descripcion = cNewDescripcion
-		WHERE id = nId;
-
+	IF cNombre IS NULL OR cNombre='' THEN	
+		SELECT insumo.nombre INTO cNewNombre FROM insumo WHERE id = nId;
+	ELSE 
+		SET cNewNombre = cNombre;
+	END IF;
+	IF cDescripcion IS NULL OR cDescripcion='' THEN	
+		SELECT insumo.descripcion INTO cNewDescripcion FROM insumo WHERE id = nId;
+	ELSE 
+		SET cNewDescripcion = cDescripcion;
 	END IF;
 
-	SELECT nResultado AS Resultado, cMensaje AS Mensaje;
+	UPDATE insumo
+	SET 
+		nombre = cNewNombre,
+		descripcion = cNewDescripcion
+	WHERE id = nId;
+
+	CALL throwMsg(0, "");
 END	$$
 
 DROP PROCEDURE IF EXISTS baja_insumo $$
 CREATE PROCEDURE baja_insumo (nId INT)
 proc: BEGIN
-
 	DECLARE nCount INT DEFAULT 0;
-	DECLARE cMensaje VARCHAR(100) DEFAULT "";
-	DECLARE nResultado INT DEFAULT 0;
 
 	SELECT COUNT(id) INTO nCount FROM insumo WHERE insumo.id = nId;
 	IF (nCount = 0) THEN
-
-		SET nResultado = -1;
-		SET cMensaje = "Insumo no existe con esa ID";
-
-	ELSE
-
-		DELETE FROM insumo WHERE id = nId;
-
+		CALL throwMsg(-1, "No existe insumo con la ID dada");
+		LEAVE proc;
 	END IF;
 
-	SELECT nResultado AS Resultado, cMensaje AS Mensaje;
+	DELETE FROM insumo WHERE id = nId;
+
+	CALL throwMsg(0, "");
 END	$$
 
 -- VEHICULO ------------------------------------------------------------------------------------
@@ -339,35 +285,26 @@ proc: BEGIN
 
 	INSERT INTO vehiculo(modelo_id, pedido_venta_id, finalizado)
 	VALUES(nModeloId,nPedidoId,bFinalizado);
+    -- TODO
 
 END$$
 
 DROP PROCEDURE IF EXISTS baja_vehiculo$$
 CREATE PROCEDURE baja_vehiculo(id int)
 proc: BEGIN
+	DECLARE nCount INT DEFAULT 0;
 
-	DECLARE C INT DEFAULT 0;
-	DECLARE RES INT DEFAULT 0;
-        DECLARE MSG VARCHAR(69) DEFAULT "";
+    SELECT COUNT(num_chasis) INTO nCount FROM vehiculo WHERE vehiculo.num_chasis = id;
 
-        SELECT COUNT(num_chasis) INTO C FROM vehiculo WHERE vehiculo.num_chasis = id;
-
-        IF (C = 0) THEN
-
-		SET RES = 0;
-        SET MSG = "Pero eso no existe, pelotudo";
+    IF (nCount = 0) THEN
+		CALL throwMsg(-1, "No existe vehiculo con la ID dada");
+        LEAVE proc;
 		-- SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Pero eso no existe, pelotudo';
+	END IF;
 
-	ELSE
+	DELETE FROM vehiculo WHERE num_chasis = id;
 
-		DELETE FROM vehiculo WHERE num_chasis = id;
-		SET RES = 1;
-		SET MSG = "Vehiculo eliminado";
-
-        END IF;
-
-        SELECT RES AS nResultado, MSG as cMensaje;
-
+	CALL throwMsg(0, "");
 END$$
 
 DROP PROCEDURE IF EXISTS mod_vehiculo$$
@@ -419,20 +356,17 @@ CREATE PROCEDURE baja_pedido_insumo(id int)
 proc: BEGIN
 
 	DECLARE C INT DEFAULT 0;
-	DECLARE RES INT DEFAULT 0;
-	DECLARE MSG VARCHAR(69) DEFAULT "";
 	
 	SELECT COUNT(id) INTO C FROM pedido_insumo WHERE id = id;
 	
 	IF (C = 0) THEN
-		SET RES = -420;
-		SET MSG = "No se encontraron pedido_insumos con esa ID";
-	ELSE
-		DELETE FROM pedido_insumo WHERE id = id;
+		CALL throwMsg(-1, "No se encontraron pedido_insumos con esa ID");
+        LEAVE proc;
 	END IF;
+    
+	DELETE FROM pedido_insumo WHERE id = id;
 	
-	SELECT RES AS nResultado, MSG as cMensaje;
-
+	CALL throwMsg(0, "");
 END$$
 
 DROP PROCEDURE IF EXISTS mod_pedido_insumo$$
@@ -483,21 +417,18 @@ CREATE PROCEDURE baja_vehiculo_x_estacion(chasisid int, stationid int)
 proc: BEGIN
 
 	DECLARE C INT DEFAULT 0;
-	DECLARE RES INT DEFAULT 0;
-	DECLARE MSG VARCHAR(69) DEFAULT "";
 
 	SELECT COUNT(id) INTO C FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = chasisid AND estacion_id = stationid;
 
 	IF (C = 0) THEN
-		SET RES = -666;
-		SET MSG = "No se encuentran resultados para el par de IDs";
+		CALL throwMsg(-1, "No se encuentran resultados para el par de IDs");
+        LEAVE proc;
 	ELSE
 		-- DELETE FROM pedido_insumo WHERE id = id;
 		DELETE FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = chasisid AND estacion_id = stationid;
 	END IF;
 
-	SELECT RES AS nResultado, MSG as cMensaje;
-
+	CALL throwMsg(0, "");
 END$$
 
 DROP PROCEDURE IF EXISTS mod_vehiculo_x_estacion$$
@@ -531,6 +462,7 @@ proc: BEGIN
 		fecha_egreso = dNewOutDate
 	WHERE vehiculo_num_chasis = nOldCarId AND estacion_id = nOldEstacionId;
 
+	CALL throwMsg(0, "");
 END$$
 
 
