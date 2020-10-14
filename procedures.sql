@@ -16,6 +16,8 @@ END$$
 
 -- CONCESIONARIA ----------------------------------------------------------------------
 
+-- Error: que falte un dato
+
 DROP PROCEDURE IF EXISTS alta_concesionaria $$ 
 CREATE PROCEDURE alta_concesionaria(cNombre VARCHAR(100), cDireccion VARCHAR(100))
 proc: BEGIN
@@ -29,6 +31,8 @@ proc: BEGIN
 
 	CALL throwMsg(0, "");
 END $$
+
+-- errores: que la concesionaria no exista, que falte un dato, usar caracteres inválidos (números, signos)
 
 DROP PROCEDURE IF EXISTS mod_concesionaria $$ 
 CREATE PROCEDURE mod_concesionaria(nId INT, cNombre VARCHAR(100), cDireccion VARCHAR(100))
@@ -89,6 +93,8 @@ END $$
 
 -- MODELO ------------------------------------------------------------------------------------
 
+-- error: que falte un dato
+
 DROP PROCEDURE IF EXISTS alta_modelo $$ 
 CREATE PROCEDURE alta_modelo(cNombre VARCHAR(100), nCantidadEstaciones INT)
 BEGIN
@@ -132,6 +138,8 @@ BEGIN
 
 	SELECT nResultado AS Resultado, cMensaje AS Mensaje;
 END $$
+
+-- errores: que el modelo no exista, que falte un dato, usar caracteres inválidos (números, signos)
 
 DROP PROCEDURE IF EXISTS mod_modelo $$ 
 CREATE PROCEDURE mod_modelo(nId INT, cNombre VARCHAR(100))
@@ -185,6 +193,8 @@ END $$
 
 -- PROVEEDOR ------------------------------------------------------------------------
 
+-- error: que falte un dato
+
 DROP PROCEDURE IF EXISTS alta_proveedor $$ 
 CREATE PROCEDURE alta_proveedor(cNombre VARCHAR(100), cRubro VARCHAR(100))
 BEGIN
@@ -208,6 +218,8 @@ BEGIN
 
 	SELECT nResultado AS Resultado, cMensaje AS Mensaje;
 END $$
+
+-- errores: que el proveedor no exista, que falte un dato, usar caracteres inválidos (números, signos)
 
 DROP PROCEDURE IF EXISTS mod_proveedor $$ 
 CREATE PROCEDURE mod_proveedor(nId INT, cNombre VARCHAR(100), cRubro VARCHAR(100))
@@ -270,6 +282,8 @@ BEGIN
 END $$
 
 -- INSUMO ---------------------------------------------------------------------------------
+
+-- error: que falte un dato
 						
 DROP PROCEDURE IF EXISTS alta_insumo $$ 
 CREATE PROCEDURE alta_insumo(cNombre VARCHAR(100), cDescripcion VARCHAR(100))
@@ -290,6 +304,8 @@ BEGIN
 
 	SELECT nResultado AS Resultado, cMensaje AS Mensaje;
 END $$
+
+-- errores: que el insumo no exista, que falte un dato, usar caracteres inválidos (números, signos)
 
 DROP PROCEDURE IF EXISTS mod_insumo $$
 CREATE PROCEDURE mod_insumo(nId INT, cNombre VARCHAR(100), cDescripcion VARCHAR(100))
@@ -356,6 +372,8 @@ END	$$
 
 -- VEHICULO ------------------------------------------------------------------------------------
 
+-- Error: que falte un dato
+
 DROP PROCEDURE IF EXISTS alta_vehiculo$$
 CREATE PROCEDURE alta_vehiculo(nModeloId int, nPedidoId int, bFinalizado BIT)
 BEGIN
@@ -393,6 +411,8 @@ BEGIN
 
 END$$
 
+-- errores: que el vehículo no exista, que falte un dato, usar caracteres inválidos (números, signos)
+
 DROP PROCEDURE IF EXISTS mod_vehiculo$$
 CREATE PROCEDURE mod_vehiculo(nId int, nModeloId int, nPedidoId int, bFinalizado BIT)
 BEGIN
@@ -428,6 +448,8 @@ END$$
 
 -- PEDIDO_INSUMO
 
+-- error: que falte un dato
+
 DROP PROCEDURE IF EXISTS alta_pedido_insumo$$
 CREATE PROCEDURE alta_pedido_insumo(nInsumoId int, nProveedorId int, fCantidad float)
 BEGIN
@@ -457,6 +479,8 @@ BEGIN
 	SELECT RES AS nResultado, MSG as cMensaje;
 
 END$$
+
+-- errores: que el pedido no exista, que falte un dato, usar caracteres inválidos (números, signos)
 
 DROP PROCEDURE IF EXISTS mod_pedido_insumo$$
 CREATE PROCEDURE mod_pedido_insumo(nId int, nInsumoId int, nProveedorId int, fCantidad float)
@@ -492,6 +516,8 @@ END$$
 
 -- VEHICULO_X_ESTACION
 
+-- error: que falte un dato, que la fecha de egreso sea anterior a la de ingreso
+
 DROP PROCEDURE IF EXISTS alta_vehiculo_x_estacion$$
 CREATE PROCEDURE alta_vehiculo_x_estacion(nChasisId int, nEstacionId int, dInDate datetime, dOutDate datetime)
 BEGIN
@@ -500,6 +526,7 @@ BEGIN
 	VALUES(nChasisId,nEstacionId,dInDate,dOutDate);
 
 END$$
+
 
 DROP PROCEDURE IF EXISTS baja_vehiculo_x_estacion$$
 CREATE PROCEDURE baja_vehiculo_x_estacion(chasisid int, stationid int)
@@ -522,6 +549,8 @@ BEGIN
 	SELECT RES AS nResultado, MSG as cMensaje;
 
 END$$
+
+-- errores: que el vehículo o la estación no existan, que falte un dato, usar caracteres inválidos (números, signos)
 
 DROP PROCEDURE IF EXISTS mod_vehiculo_x_estacion$$
 CREATE PROCEDURE mod_vehiculo_x_estacion(nOldCarId int, nOldEstacionId int, nNextCarId int, nNextEstacionId int, nInDate datetime, dOutDate datetime)
@@ -559,6 +588,8 @@ END$$
 
 -- ESTACIÓN
 
+-- error: que falte un dato
+
 DROP PROCEDURE IF EXISTS alta_estacion$$
 CREATE PROCEDURE alta_estacion (nLineaMontajeId int, cDescripcion varchar(100))
 BEGIN
@@ -589,6 +620,8 @@ BEGIN
 
 END$$
 
+-- errores: que la estación no exista, que falte un dato, usar caracteres inválidos (números, signos)
+
 DROP PROCEDURE IF EXISTS mod_estacion$$
 CREATE PROCEDURE mod_estacion(nId int, nLineaMontajeId int, cDescripcion varchar(100))
 BEGIN
@@ -618,6 +651,8 @@ END$$
 
 -- DETALLE_VENTA
 
+-- error: que falte un dato 
+
 DROP PROCEDURE IF EXISTS alta_detalle_venta$$
 CREATE PROCEDURE alta_detalle_venta (nPedidoVentaId int, modelo_id int, cantidad int)
 BEGIN
@@ -634,6 +669,8 @@ BEGIN
 	DELETE FROM detalle_venta WHERE id = id;
 
 END$$
+
+-- errores: que el pedido venta o el modelo no existan, que falte un dato, usar caracteres inválidos (números, signos)
 
 DROP PROCEDURE IF EXISTS mod_detalle_venta$$
 CREATE PROCEDURE mod_detalle_venta(nId int, nPedidoVentaId int, nModeloId int, nCantidad int)
@@ -671,6 +708,8 @@ END$$
 
 -- PEDIDO_VENTA
 
+-- error: que falte un dato
+
 DROP PROCEDURE IF EXISTS alta_pedido_venta$$
 CREATE PROCEDURE alta_pedido_venta (nConcesionariaId int)
 BEGIN
@@ -687,6 +726,8 @@ BEGIN
 	DELETE FROM pedido_venta WHERE id = id;
 
 END$$
+
+-- errores: que la concesionaria no exista, que falte un dato, usar caracteres inválidos (números, signos)
 
 DROP PROCEDURE IF EXISTS mod_pedido_venta$$
 CREATE PROCEDURE mod_pedido_venta(nId int, nConcesionariaId int)
@@ -708,6 +749,8 @@ END$$
 
 -- LINEA_MONTAJE
 
+-- error: que falte un dato
+
 DROP PROCEDURE IF EXISTS alta_linea_montaje$$
 CREATE PROCEDURE alta_linea_montaje (nModeloId int)
 BEGIN
@@ -715,11 +758,15 @@ BEGIN
 	VALUES(nModeloId, 0);
 END$$
 
+-- error: que haya todavía un vehículo o modelo
+
 DROP PROCEDURE IF EXISTS baja_linea_montaje$$
 CREATE PROCEDURE baja_linea_montaje(id int)
 BEGIN
 	DELETE FROM linea_montaje WHERE id = id;
 END$$
+
+-- errores: que el vehículo o el modelo no existan, que falte un dato, usar caracteres inválidos (números, signos)
 
 DROP PROCEDURE IF EXISTS mod_linea_montaje$$
 CREATE PROCEDURE mod_linea_montaje(nId int, nVehiculosMes int, nModeloId int)
