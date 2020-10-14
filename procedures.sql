@@ -32,141 +32,118 @@ END $$
 
 DROP PROCEDURE IF EXISTS mod_concesionaria $$ 
 CREATE PROCEDURE mod_concesionaria(nId INT, cNombre VARCHAR(100), cDireccion VARCHAR(100))
-BEGIN
+proc: BEGIN
 	DECLARE nCount INT DEFAULT 0;
 	DECLARE cNewNombre VARCHAR(100);
 	DECLARE cNewDireccion VARCHAR(100);
-	DECLARE cMensaje VARCHAR(100) DEFAULT "";
-	DECLARE nResultado INT DEFAULT 0;
 
 	SELECT COUNT(id) INTO nCount FROM concesionaria WHERE concesionaria.id = nId;
     IF (nCount = 0) THEN
-		SET nResultado = -1;
-        SET cMensaje = "Concesionaria inexistente";
-        
-        
-    ELSE
-
-		IF cNombre IS NULL OR cNombre='' THEN	
-			SELECT concesionaria.nombre INTO cNewNombre FROM concesionaria WHERE id = nId;
-		ELSE 
-			SET cNewNombre = cNombre;
-		END IF;
-		IF cDireccion IS NULL OR cDireccion='' THEN
-			SELECT concesionaria.direccion INTO cNewDireccion FROM concesionaria WHERE id = nId;
-		ELSE 
-			SET cNewDireccion = cDireccion;
-		END IF;
-	
-		UPDATE concesionaria
-		  SET 
-		    nombre = cNewNombre,
-		    direccion = cNewDireccion
-		  WHERE id = nId;
+        CALL throwMsg(-1, "Concesionaria inexistente");
+        LEAVE proc;
 	END IF;
 
-	SELECT nResultado AS Resultado, cMensaje AS Mensaje;
+	IF cNombre IS NULL OR cNombre='' THEN	
+		SELECT concesionaria.nombre INTO cNewNombre FROM concesionaria WHERE id = nId;
+	ELSE 
+		SET cNewNombre = cNombre;
+	END IF;
+	IF cDireccion IS NULL OR cDireccion='' THEN
+		SELECT concesionaria.direccion INTO cNewDireccion FROM concesionaria WHERE id = nId;
+	ELSE 
+		SET cNewDireccion = cDireccion;
+	END IF;
+	
+	UPDATE concesionaria SET 
+		nombre = cNewNombre,
+		direccion = cNewDireccion
+	WHERE id = nId;
+
+	CALL throwMsg(0, "");
 END $$
 
 DROP PROCEDURE IF EXISTS baja_concesionaria $$
 CREATE PROCEDURE baja_concesionaria (nId INT)
-BEGIN
+proc: BEGIN
 
 	DECLARE nCount INT DEFAULT 0;
-	DECLARE cMensaje VARCHAR(100) DEFAULT "";
-	DECLARE nResultado INT DEFAULT 0;
 
 	SELECT COUNT(id) INTO nCount FROM concesionaria WHERE concesionaria.id = nId;
     IF (nCount = 0) THEN
-		SET nResultado = -1;
-        SET cMensaje = "Concesionaria inexistente";
-    ELSE
-		DELETE FROM concesionaria WHERE id = nId;
-	END IF;
+        CALL throwMsg(-1, "Concesionaria inexistente");
+        LEAVE proc;
+    END IF;
+    
+	DELETE FROM concesionaria WHERE id = nId;
 
-	SELECT nResultado AS Resultado, cMensaje AS Mensaje;
+	CALL throwMsg(0, "");
 END $$
 
 -- MODELO ------------------------------------------------------------------------------------
 
 DROP PROCEDURE IF EXISTS alta_modelo $$ 
 CREATE PROCEDURE alta_modelo(cNombre VARCHAR(100), nCantidadEstaciones INT)
-BEGIN
+proc: BEGIN
 	
-	DECLARE cMensaje VARCHAR(100) DEFAULT "";
-	DECLARE nResultado INT DEFAULT 0;
 	DECLARE nModeloId INT;
 	DECLARE nLineaMontajeId INT;
 	DECLARE nInsertados INT;
 	
-	IF cNombre IS NULL OR cNombre='' THEN	
-		SET nResultado = -1;
-		SET cMensaje = "Inserte un nombre para el modelo";
+	IF cNombre IS NULL OR cNombre='' THEN
+        CALL throwMsg(-1, "Inserte un nombre para el modelo");
+        LEAVE proc;
 	END IF;
 	IF nCantidadEstaciones < 1 OR nCantidadEstaciones IS NULL THEN
-		SET nResultado = -1;
-		SET cMensaje = "Se necesita 1 estacion como minimo";
+        CALL throwMsg(-1, "Se necesita 1 estacion como minimo");
+        LEAVE proc;
 	END IF;
+		
+	INSERT INTO modelo(nombre) VALUES(cNombre);
 	
-	IF nResultado = 0 THEN
-		
-		INSERT INTO modelo(nombre)
-		VALUES(cNombre);
-		
-		SELECT MAX(id) INTO nModeloId FROM modelo; -- ultima id cargada MAX(id)
-		
-		CALL alta_linea_montaje(nModeloId);
-		
-		SELECT MAX(id) INTO nLineaMontajeId FROM linea_montaje;
-		
-		SET nInsertados = 0;
-		
-			WHILE nInsertados < nCantidadEstaciones DO
-			
-				CALL alta_estacion(nLineaMontajeId, 'descripcion');
-			
-				SET nInsertados = nInsertados + 1;
-				
-			END WHILE;
-	END IF;
+	SELECT MAX(id) INTO nModeloId FROM modelo; -- ultima id cargada MAX(id)
+	
+	CALL alta_linea_montaje(nModeloId);
+	
+	SELECT MAX(id) INTO nLineaMontajeId FROM linea_montaje;
+	
+	SET nInsertados = 0;
+	
+	WHILE nInsertados < nCantidadEstaciones DO
+		CALL alta_estacion(nLineaMontajeId, 'descripcion');
+		SET nInsertados = nInsertados + 1;
+	END WHILE;
 
-	SELECT nResultado AS Resultado, cMensaje AS Mensaje;
+	CALL throwMsg(0, "");
 END $$
 
 DROP PROCEDURE IF EXISTS mod_modelo $$ 
 CREATE PROCEDURE mod_modelo(nId INT, cNombre VARCHAR(100))
-BEGIN
-	
+proc: BEGIN
 	DECLARE nCount INT DEFAULT 0;
 	DECLARE cNewNombre VARCHAR(100);
-	DECLARE cMensaje VARCHAR(100) DEFAULT "";
-	DECLARE nResultado INT DEFAULT 0;
 
 	SELECT COUNT(id) INTO nCount FROM modelo WHERE modelo.id = nId;
     IF (nCount = 0) THEN
-    
-		SET nResultado = -1;
-        SET cMensaje = "Modelo inexistente";
-       
-	ELSE
-	
-		IF cNombre IS NULL OR cNombre='' THEN	
-			SELECT modelo.nombre INTO cNewNombre FROM modelo WHERE id = nId;
-		ELSE 
-			SET cNewNombre = cNombre;
-		END IF;
-	
-		UPDATE modelo
-		  SET nombre = cNewNombre
-		  WHERE id = nId;
+		CALL throwMsg(-1, "Modelo inexistente");
+		LEAVE proc;
 	END IF;
-
- 	SELECT nResultado AS Resultado, cMensaje AS Mensaje;
+    
+	IF cNombre IS NULL OR cNombre='' THEN	
+		SELECT modelo.nombre INTO cNewNombre FROM modelo WHERE id = nId;
+	ELSE 
+		SET cNewNombre = cNombre;
+	END IF;
+	
+	UPDATE modelo
+		SET nombre = cNewNombre
+	WHERE id = nId;
+	
+	CALL throwMsg(0, "");
 END $$
 
 DROP PROCEDURE IF EXISTS baja_modelo $$
 CREATE PROCEDURE baja_modelo (nId INT)
-BEGIN
+proc: BEGIN
 
 	DECLARE nCount INT DEFAULT 0;
 	DECLARE cMensaje VARCHAR(100) DEFAULT "";
@@ -187,7 +164,7 @@ END $$
 
 DROP PROCEDURE IF EXISTS alta_proveedor $$ 
 CREATE PROCEDURE alta_proveedor(cNombre VARCHAR(100), cRubro VARCHAR(100))
-BEGIN
+proc: BEGIN
 
 	DECLARE cMensaje VARCHAR(100) DEFAULT "";
 	DECLARE nResultado INT DEFAULT 0;
@@ -211,7 +188,7 @@ END $$
 
 DROP PROCEDURE IF EXISTS mod_proveedor $$ 
 CREATE PROCEDURE mod_proveedor(nId INT, cNombre VARCHAR(100), cRubro VARCHAR(100))
-BEGIN
+proc: BEGIN
 	
 	DECLARE nCount INT DEFAULT 0;
 	DECLARE cNewNombre VARCHAR(100);
@@ -250,7 +227,7 @@ END $$
 
 DROP PROCEDURE IF EXISTS baja_proveedor $$
 CREATE PROCEDURE baja_proveedor (nId INT)
-BEGIN
+proc: BEGIN
 
 	DECLARE nCount INT DEFAULT 0;
 	DECLARE cMensaje VARCHAR(100) DEFAULT "";
@@ -273,7 +250,7 @@ END $$
 						
 DROP PROCEDURE IF EXISTS alta_insumo $$ 
 CREATE PROCEDURE alta_insumo(cNombre VARCHAR(100), cDescripcion VARCHAR(100))
-BEGIN
+proc: BEGIN
 
 	DECLARE cMensaje VARCHAR(100) DEFAULT "";
 	DECLARE nResultado INT DEFAULT 0;
@@ -293,7 +270,7 @@ END $$
 
 DROP PROCEDURE IF EXISTS mod_insumo $$
 CREATE PROCEDURE mod_insumo(nId INT, cNombre VARCHAR(100), cDescripcion VARCHAR(100))
-BEGIN
+proc: BEGIN
 	
 	DECLARE cNewNombre VARCHAR(100);
 	DECLARE cNewDescripcion VARCHAR(100);
@@ -333,7 +310,7 @@ END	$$
 
 DROP PROCEDURE IF EXISTS baja_insumo $$
 CREATE PROCEDURE baja_insumo (nId INT)
-BEGIN
+proc: BEGIN
 
 	DECLARE nCount INT DEFAULT 0;
 	DECLARE cMensaje VARCHAR(100) DEFAULT "";
@@ -358,7 +335,7 @@ END	$$
 
 DROP PROCEDURE IF EXISTS alta_vehiculo$$
 CREATE PROCEDURE alta_vehiculo(nModeloId int, nPedidoId int, bFinalizado BIT)
-BEGIN
+proc: BEGIN
 
 	INSERT INTO vehiculo(modelo_id, pedido_venta_id, finalizado)
 	VALUES(nModeloId,nPedidoId,bFinalizado);
@@ -367,7 +344,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS baja_vehiculo$$
 CREATE PROCEDURE baja_vehiculo(id int)
-BEGIN
+proc: BEGIN
 
 	DECLARE C INT DEFAULT 0;
 	DECLARE RES INT DEFAULT 0;
@@ -395,7 +372,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS mod_vehiculo$$
 CREATE PROCEDURE mod_vehiculo(nId int, nModeloId int, nPedidoId int, bFinalizado BIT)
-BEGIN
+proc: BEGIN
 	
 	DECLARE nNewModeloId,nNewPedidoId int;
 	DECLARE bNewFinalizado BIT;
@@ -430,7 +407,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS alta_pedido_insumo$$
 CREATE PROCEDURE alta_pedido_insumo(nInsumoId int, nProveedorId int, fCantidad float)
-BEGIN
+proc: BEGIN
 
 	INSERT INTO pedido_insumo(insumo_id,proveedor_id,cantidad)
 	VALUES(nInsumoId,nProveedorId,fCantidad);
@@ -439,7 +416,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS baja_pedido_insumo$$
 CREATE PROCEDURE baja_pedido_insumo(id int)
-BEGIN
+proc: BEGIN
 
 	DECLARE C INT DEFAULT 0;
 	DECLARE RES INT DEFAULT 0;
@@ -460,7 +437,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS mod_pedido_insumo$$
 CREATE PROCEDURE mod_pedido_insumo(nId int, nInsumoId int, nProveedorId int, fCantidad float)
-BEGIN
+proc: BEGIN
 	
 	DECLARE nNewInsumoId,nNewProveedorId,fNewCantidad int;
 	
@@ -494,7 +471,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS alta_vehiculo_x_estacion$$
 CREATE PROCEDURE alta_vehiculo_x_estacion(nChasisId int, nEstacionId int, dInDate datetime, dOutDate datetime)
-BEGIN
+proc: BEGIN
 
 	INSERT INTO vehiculo_x_estacion(vehiculo_num_chasis, estacion_id, fecha_ingreso, fecha_egreso)
 	VALUES(nChasisId,nEstacionId,dInDate,dOutDate);
@@ -503,7 +480,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS baja_vehiculo_x_estacion$$
 CREATE PROCEDURE baja_vehiculo_x_estacion(chasisid int, stationid int)
-BEGIN
+proc: BEGIN
 
 	DECLARE C INT DEFAULT 0;
 	DECLARE RES INT DEFAULT 0;
@@ -525,7 +502,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS mod_vehiculo_x_estacion$$
 CREATE PROCEDURE mod_vehiculo_x_estacion(nOldCarId int, nOldEstacionId int, nNextCarId int, nNextEstacionId int, nInDate datetime, dOutDate datetime)
-BEGIN
+proc: BEGIN
 	-- oldX: Se modificara la entrada que tenga este par de PKs
 	-- newX: Si se modifica el valor de alguna PK, a cual
 	DECLARE nNewEstacionId,nNewCarId int;
@@ -561,7 +538,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS alta_estacion$$
 CREATE PROCEDURE alta_estacion (nLineaMontajeId int, cDescripcion varchar(100))
-BEGIN
+proc: BEGIN
 
 	INSERT INTO estacion(linea_montaje_id, descripcion)
 	VALUES(nLineaMontajeId, cDescripcion);
@@ -570,7 +547,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS baja_estacion$$
 CREATE PROCEDURE baja_estacion(id int)
-BEGIN
+proc: BEGIN
 
 	DECLARE C INT DEFAULT 0;
 	DECLARE RES INT DEFAULT 0;
@@ -591,7 +568,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS mod_estacion$$
 CREATE PROCEDURE mod_estacion(nId int, nLineaMontajeId int, cDescripcion varchar(100))
-BEGIN
+proc: BEGIN
 
 	DECLARE nNewLineaMontajeId int;
 	DECLARE cNewDescripcion varchar(100);
@@ -620,7 +597,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS alta_detalle_venta$$
 CREATE PROCEDURE alta_detalle_venta (nPedidoVentaId int, modelo_id int, cantidad int)
-BEGIN
+proc: BEGIN
 
 	INSERT INTO detalle_venta(pedido_venta_id, modelo_id, cantidad)
 	VALUES(nPedidoVentaId, modelo_id, cantidad);
@@ -629,7 +606,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS baja_detalle_venta$$
 CREATE PROCEDURE baja_detalle_venta(id int)
-BEGIN
+proc: BEGIN
 
 	DELETE FROM detalle_venta WHERE id = id;
 
@@ -637,7 +614,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS mod_detalle_venta$$
 CREATE PROCEDURE mod_detalle_venta(nId int, nPedidoVentaId int, nModeloId int, nCantidad int)
-BEGIN
+proc: BEGIN
 
 	DECLARE nNewPedidoVentaId int;
 	DECLARE nNewModeloId int;
@@ -673,7 +650,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS alta_pedido_venta$$
 CREATE PROCEDURE alta_pedido_venta (nConcesionariaId int)
-BEGIN
+proc: BEGIN
 
 	INSERT INTO pedido_venta(concesionaria_id)
 	VALUES(nConcesionariaId);
@@ -690,7 +667,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS mod_pedido_venta$$
 CREATE PROCEDURE mod_pedido_venta(nId int, nConcesionariaId int)
-BEGIN
+proc: BEGIN
 
 	DECLARE nNewConcesionariaId int;
     
@@ -710,20 +687,20 @@ END$$
 
 DROP PROCEDURE IF EXISTS alta_linea_montaje$$
 CREATE PROCEDURE alta_linea_montaje (nModeloId int)
-BEGIN
+proc: BEGIN
 	INSERT INTO linea_montaje(modelo_id, vehiculos_mes)
 	VALUES(nModeloId, 0);
 END$$
 
 DROP PROCEDURE IF EXISTS baja_linea_montaje$$
 CREATE PROCEDURE baja_linea_montaje(id int)
-BEGIN
+proc: BEGIN
 	DELETE FROM linea_montaje WHERE id = id;
 END$$
 
 DROP PROCEDURE IF EXISTS mod_linea_montaje$$
 CREATE PROCEDURE mod_linea_montaje(nId int, nVehiculosMes int, nModeloId int)
-BEGIN
+proc: BEGIN
 	DECLARE nNewVehiculosMes int;
 	DECLARE nNewModeloId int;
     
@@ -751,7 +728,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS comenzar_ensamblado$$
 CREATE PROCEDURE comenzar_ensamblado(pedido_venta_id INT)
-BEGIN
+proc: BEGIN
 
 	DECLARE finished INT DEFAULT 0;
 	DECLARE nCantidad INT; 
