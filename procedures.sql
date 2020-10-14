@@ -8,33 +8,31 @@ BEGIN
     insert into logs select 0, cMsg;
 END $$
 
+DROP PROCEDURE IF EXISTS throwMsg$$
+CREATE PROCEDURE throwMsg(nResultado INT, cMensaje VARCHAR(100))
+BEGIN
+	SELECT nResultado AS Resultado, cMensaje AS Mensaje;
+END$$
+
 -- CONCESIONARIA ----------------------------------------------------------------------
 
 DROP PROCEDURE IF EXISTS alta_concesionaria $$ 
 CREATE PROCEDURE alta_concesionaria(cNombre VARCHAR(100), cDireccion VARCHAR(100))
-BEGIN
-
-	DECLARE cMensaje VARCHAR(100) DEFAULT "";
-	DECLARE nResultado INT DEFAULT 0;
-
+proc: BEGIN
 	IF cNombre IS NULL OR cNombre='' OR cDireccion IS NULL OR cDireccion='' THEN
-	
-		SET nResultado = -1;
-		SET cMensaje = "Error: verifique los valores de sus parametros";
-	
-	ELSE
-		
-		INSERT INTO concesionaria(nombre,direccion)
-		VALUES(cNombre,cDireccion);
+		CALL throwMsg(-1, "Error: verifique los valores de sus parametros");
+        LEAVE proc;
 	END IF;
+	
+	INSERT INTO concesionaria(nombre,direccion)
+	VALUES(cNombre,cDireccion);
 
-	SELECT nResultado AS Resultado, cMensaje AS Mensaje;
+	CALL throwMsg(0, "");
 END $$
 
 DROP PROCEDURE IF EXISTS mod_concesionaria $$ 
 CREATE PROCEDURE mod_concesionaria(nId INT, cNombre VARCHAR(100), cDireccion VARCHAR(100))
 BEGIN
-	
 	DECLARE nCount INT DEFAULT 0;
 	DECLARE cNewNombre VARCHAR(100);
 	DECLARE cNewDireccion VARCHAR(100);
@@ -43,9 +41,10 @@ BEGIN
 
 	SELECT COUNT(id) INTO nCount FROM concesionaria WHERE concesionaria.id = nId;
     IF (nCount = 0) THEN
- 
 		SET nResultado = -1;
         SET cMensaje = "Concesionaria inexistente";
+        
+        
     ELSE
 
 		IF cNombre IS NULL OR cNombre='' THEN	
