@@ -82,7 +82,6 @@ BEGIN
 		SET nResultado = -1;
         SET cMensaje = "Concesionaria inexistente";
     ELSE
-
 		DELETE FROM concesionaria WHERE id = nId;
 	END IF;
 
@@ -101,14 +100,11 @@ BEGIN
 	DECLARE nLineaMontajeId INT;
 	DECLARE nInsertados INT;
 	
-	
 	IF cNombre IS NULL OR cNombre='' THEN	
-	
 		SET nResultado = -1;
 		SET cMensaje = "Inserte un nombre para el modelo";
 	END IF;
 	IF nCantidadEstaciones < 1 OR nCantidadEstaciones IS NULL THEN
-	
 		SET nResultado = -1;
 		SET cMensaje = "Se necesita 1 estacion como minimo";
 	END IF;
@@ -123,7 +119,6 @@ BEGIN
 		CALL alta_linea_montaje(nModeloId);
 		
 		SELECT MAX(id) INTO nLineaMontajeId FROM linea_montaje;
-		
 		
 		SET nInsertados = 0;
 		
@@ -150,6 +145,7 @@ BEGIN
 
 	SELECT COUNT(id) INTO nCount FROM modelo WHERE modelo.id = nId;
     IF (nCount = 0) THEN
+    
 		SET nResultado = -1;
         SET cMensaje = "Modelo inexistente";
        
@@ -162,8 +158,7 @@ BEGIN
 		END IF;
 	
 		UPDATE modelo
-		  SET 
-		    nombre = cNewNombre
+		  SET nombre = cNewNombre
 		  WHERE id = nId;
 	END IF;
 
@@ -182,11 +177,8 @@ BEGIN
     IF (nCount = 0) THEN
 		SET nResultado = -1;
         SET cMensaje = "Modelo inexistente";
-       
 	ELSE
-	
-	DELETE FROM modelo WHERE id = nId;
-
+		DELETE FROM modelo WHERE id = nId;
 	END IF;
 
 	SELECT nResultado AS Resultado, cMensaje AS Mensaje;
@@ -202,12 +194,10 @@ BEGIN
 	DECLARE nResultado INT DEFAULT 0;
 
 	IF cNombre IS NULL OR cNombre='' THEN	
-	
 		SET nResultado = -1;
 		SET cMensaje = "Inserte un nombre para el proveedor";
 	END IF;
 	IF cRubro IS NULL OR cRubro='' THEN	
-	
 		SET nResultado = -1;
 		SET cMensaje = "Inserte un rubro para el proveedor";
 	END IF;
@@ -232,12 +222,11 @@ BEGIN
 
 	SELECT COUNT(id) INTO nCount FROM proveedor WHERE proveedor.id = nId;
 	IF (nCount = 0) THEN
-
+    
 		SET nResultado = -1;
 		SET cMensaje = "Proveedor no existe con esa ID";
-	
+        
 	ELSE
-
 		IF cNombre IS NULL OR cNombre='' THEN	
 		SELECT proveedor.nombre INTO cNewNombre FROM proveedor WHERE id = nId;
 		ELSE 
@@ -270,10 +259,8 @@ BEGIN
 
 	SELECT COUNT(id) INTO nCount FROM proveedor WHERE proveedor.id = nId;
 	IF (nCount = 0) THEN
-
 		SET nResultado = -1;
 		SET cMensaje = "Proveedor no existe con esa ID";
-	
 	ELSE
 
 		DELETE FROM proveedor WHERE id = nId;
@@ -293,7 +280,6 @@ BEGIN
 	DECLARE nResultado INT DEFAULT 0;
 
 	IF cNombre IS NULL OR cNombre='' THEN	
-	
 		SET nResultado = -1;
 		SET cMensaje = "Inserte un nombre para el insumo";
 	END IF;
@@ -321,9 +307,9 @@ BEGIN
 
 		SET nResultado = -1;
 		SET cMensaje = "Insumo no existe con esa ID";
-	
-	ELSE
 
+	ELSE
+    
 		IF cNombre IS NULL OR cNombre='' THEN	
 			SELECT insumo.nombre INTO cNewNombre FROM insumo WHERE id = nId;
 		ELSE 
@@ -393,7 +379,7 @@ BEGIN
         IF (C = 0) THEN
 
 		SET RES = 0;
-                SET MSG = "Pero eso no existe, pelotudo";
+        SET MSG = "Pero eso no existe, pelotudo";
 		-- SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Pero eso no existe, pelotudo';
 
 	ELSE
@@ -411,42 +397,32 @@ END$$
 DROP PROCEDURE IF EXISTS mod_vehiculo$$
 CREATE PROCEDURE mod_vehiculo(nId int, nModeloId int, nPedidoId int, bFinalizado BIT)
 BEGIN
-
-        DECLARE nNewModeloId,nNewPedidoId int;
-        DECLARE bNewFinalizado BIT;
-    
-        IF ISNULL(nModeloId) THEN
-
+	
+	DECLARE nNewModeloId,nNewPedidoId int;
+	DECLARE bNewFinalizado BIT;
+	
+	IF ISNULL(nModeloId) THEN
 		SELECT modelo_id INTO nNewModeloId FROM vehiculo WHERE num_chasis = nId;
-
-        ELSE 
-
-                SET nNewModeloId = nModeloId; 
-
-        END IF;
-
-        IF ISNULL(nPedidoId) THEN
-
-                 SELECT pedido_venta_id INTO nNewPedidoId FROM vehiculo WHERE num_chasis = nId;
-
-        ELSE 
-                 SET nNewPedidoId = nPedidoId; 
-
-        END IF;
-
-        IF ISNULL(bFinalizado) THEN
-
-                 SELECT finalizado INTO bNewFinalizado FROM vehiculo WHERE num_chasis = nId;
-
-        ELSE 
-                 SET bNewFinalizado = bFinalizado; 
-
-        END IF;
+	ELSE 
+		SET nNewModeloId = nModeloId; 
+	END IF;
+	
+	IF ISNULL(nPedidoId) THEN
+		SELECT pedido_venta_id INTO nNewPedidoId FROM vehiculo WHERE num_chasis = nId;
+	ELSE 
+		SET nNewPedidoId = nPedidoId; 
+	END IF;
+	
+	IF ISNULL(bFinalizado) THEN
+		SELECT finalizado INTO bNewFinalizado FROM vehiculo WHERE num_chasis = nId;
+	ELSE 
+		SET bNewFinalizado = bFinalizado; 
+	END IF;
     
 	UPDATE vehiculo SET
-                 modelo_id = nNewModeloId,
-                 pedido_venta_id = nNewPedidoId,
-                 finalizado = bNewFinalizado
+		modelo_id = nNewModeloId,
+		pedido_venta_id = nNewPedidoId,
+		finalizado = bNewFinalizado
 	WHERE num_chasis = nId;
 
 END$$
@@ -468,67 +444,49 @@ BEGIN
 
 	DECLARE C INT DEFAULT 0;
 	DECLARE RES INT DEFAULT 0;
-        DECLARE MSG VARCHAR(69) DEFAULT "";
-
-        SELECT COUNT(id) INTO C FROM pedido_insumo WHERE id = id;
-
-        IF (C = 0) THEN
-
-                 SET RES = -420;
-                 SET MSG = "No se encontraron pedido_insumos con esa ID";
-
+	DECLARE MSG VARCHAR(69) DEFAULT "";
+	
+	SELECT COUNT(id) INTO C FROM pedido_insumo WHERE id = id;
+	
+	IF (C = 0) THEN
+		SET RES = -420;
+		SET MSG = "No se encontraron pedido_insumos con esa ID";
 	ELSE
-
-                 DELETE FROM pedido_insumo WHERE id = id;
-
-        END IF;
-
-        SELECT RES AS nResultado, MSG as cMensaje;
+		DELETE FROM pedido_insumo WHERE id = id;
+	END IF;
+	
+	SELECT RES AS nResultado, MSG as cMensaje;
 
 END$$
 
 DROP PROCEDURE IF EXISTS mod_pedido_insumo$$
 CREATE PROCEDURE mod_pedido_insumo(nId int, nInsumoId int, nProveedorId int, fCantidad float)
 BEGIN
-
-        DECLARE nNewInsumoId,nNewProveedorId,fNewCantidad int;
-    
-        IF ISNULL(nInsumoId) THEN 
-
-                 SELECT insumo_id INTO nNewInsumoId FROM pedido_insumo WHERE id = nId;
-
-        ELSE 
-
-                 SET nNewInsumoId = nInsumoId;
- 
-        END IF;
-
-        IF ISNULL(nProveedorId) THEN
-
-                 SELECT proveedor_id INTO nNewProveedorId FROM pedido_insumo WHERE id = nId;
-
-        ELSE 
-
-                 SET nNewProveedorId = nProveedorId; 
-
-        END IF;
-
-        IF ISNULL(fCantidad) THEN 
-
-                 SELECT cantidad INTO fNewCantidad FROM pedido_insumo WHERE id = nId;
-
-        ELSE 
-
-                 SET fNewCantidad = fCantidad; 
-
-        END IF;
+	
+	DECLARE nNewInsumoId,nNewProveedorId,fNewCantidad int;
+	
+	IF ISNULL(nInsumoId) THEN 
+		SELECT insumo_id INTO nNewInsumoId FROM pedido_insumo WHERE id = nId;
+	ELSE 
+		SET nNewInsumoId = nInsumoId;
+	END IF;
+	
+	IF ISNULL(nProveedorId) THEN
+		SELECT proveedor_id INTO nNewProveedorId FROM pedido_insumo WHERE id = nId;
+	ELSE 
+		SET nNewProveedorId = nProveedorId; 
+	END IF;
+	
+	IF ISNULL(fCantidad) THEN 
+		SELECT cantidad INTO fNewCantidad FROM pedido_insumo WHERE id = nId;
+	ELSE 
+		SET fNewCantidad = fCantidad; 
+	END IF;
     
 	UPDATE pedido_insumo SET
-
 		insumo_id = nNewInsumoId,
 		proveedor_id = nNewProveedorId,
 		cantidad = fNewCantidad
-
 	WHERE id = nId;
 
 END$$
@@ -555,15 +513,11 @@ BEGIN
 	SELECT COUNT(id) INTO C FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = chasisid AND estacion_id = stationid;
 
 	IF (C = 0) THEN
-
-                 SET RES = -666;
-                 SET MSG = "No se encuentran resultados para el par de IDs";
-
+		SET RES = -666;
+		SET MSG = "No se encuentran resultados para el par de IDs";
 	ELSE
-
-                 -- DELETE FROM pedido_insumo WHERE id = id;
-                 DELETE FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = chasisid AND estacion_id = stationid;
-
+		-- DELETE FROM pedido_insumo WHERE id = id;
+		DELETE FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = chasisid AND estacion_id = stationid;
 	END IF;
 
 	SELECT RES AS nResultado, MSG as cMensaje;
@@ -579,33 +533,26 @@ BEGIN
 	DECLARE dNewInDate,dNewOutDate datetime;
     
 	IF ISNULL(nNextCarId) THEN
-
-                  SET nNewCarId = nOldCarId; ELSE SET nNewCarId = nNextCarId; 
+		SET nNewCarId = nOldCarId; ELSE SET nNewCarId = nNextCarId; 
 	END IF;
 
 	IF ISNULL(nNextEstacionId) THEN 
-
-                 SET nNewEstacionId = nOldEstacionId; ELSE SET nNewEstacionId = nNextEstacionId; 
-
+		SET nNewEstacionId = nOldEstacionId; ELSE SET nNewEstacionId = nNextEstacionId; 
 	END IF;
 
 	IF ISNULL(dInDate) THEN 
-
-                 SELECT fecha_ingreso INTO dNewInDate FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = id;
-
+		SELECT fecha_ingreso INTO dNewInDate FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = id;
 	ELSE 
-
-                 SET dNewInDate = dInDate; 
-
+		SET dNewInDate = dInDate; 
 	END IF;
 
     -- No hay chequeo para outdate - este puede ser nulo
     
 	UPDATE vehiculo_x_estacion SET
-                 vehiculo_num_chasis = nNewCarId,
-		 estacion_id = nNewEstacionId,
-		 fecha_ingreso = dNewIndate,
-		 fecha_egreso = dNewOutDate
+		vehiculo_num_chasis = nNewCarId,
+		estacion_id = nNewEstacionId,
+		fecha_ingreso = dNewIndate,
+		fecha_egreso = dNewOutDate
 	WHERE vehiculo_num_chasis = nOldCarId AND estacion_id = nOldEstacionId;
 
 END$$
@@ -633,17 +580,13 @@ BEGIN
 	SELECT COUNT(id) INTO C FROM estacion WHERE id=id;
 
 	IF (C = 0) THEN
-
-		 SET RES = -404;
-		 SET MSG = "No se encuentran resultados para ese ID";
-
+		SET RES = -404;
+		SET MSG = "No se encuentran resultados para ese ID";
 	ELSE
-	
-		 DELETE FROM estacion WHERE id=id;
-
+		DELETE FROM estacion WHERE id=id;
 	END IF;
 
-		 SELECT RES AS nResultado, MSG as cMensaje;
+	SELECT RES AS nResultado, MSG as cMensaje;
 
 END$$
 
@@ -652,28 +595,19 @@ CREATE PROCEDURE mod_estacion(nId int, nLineaMontajeId int, cDescripcion varchar
 BEGIN
 
 	DECLARE nNewLineaMontajeId int;
-	DECLARE new_descripcion varchar(100);
+	DECLARE cNewDescripcion varchar(100);
     
 	IF ISNULL(nLineaMontajeId) THEN
-
-		 SELECT linea_montaje_id INTO nNewLineaMontajeId FROM estacion WHERE id = nId;
-
+		SELECT linea_montaje_id INTO nNewLineaMontajeId FROM estacion WHERE id = nId;
 	ELSE 
-
-		 SET nNewLineaMontajeId = nLineaMontajeId; 
-
+		SET nNewLineaMontajeId = nLineaMontajeId; 
 	END IF;
 
 	IF ISNULL(cDescripcion) THEN
-
- 		 SELECT descripcion INTO cNewDescripcion FROM estacion WHERE id = nId;
-
+		SELECT descripcion INTO cNewDescripcion FROM estacion WHERE id = nId;
 	ELSE 
-
-		 SET cNewDescripcion = cDescripcion; 
-
+		SET cNewDescripcion = cDescripcion; 
 	END IF;
-
     
 	UPDATE estacion SET
 		 linea_montaje_id = new_linea_montaje_id,
@@ -711,37 +645,26 @@ BEGIN
 	DECLARE nNewCantidad int;
     
 	IF ISNULL(nPedidoVentaId) THEN 
-
 		 SELECT pedido_venta_id INTO nNewPedidoVentaId FROM detalle_venta WHERE id = nId;
 	ELSE 
 		 SET nNewPedidoVentaId = nPedidoVentaId; 
 	END IF;
 
 	IF ISNULL(nModeloId) THEN 
-
 		 SELECT modelo_id INTO nNewModeloId FROM detalle_venta WHERE id = nId;
-
 	ELSE 
-
 		 SET nNewModeloId = nModeloId; 
-
 	END IF;
 
 	IF ISNULL(nCantidad) THEN 
-
 		 SELECT cantidad INTO nNewCantidad FROM detalle_venta WHERE id = nId;
-
 	ELSE 
-
 		 SET nNewCantidad = nCantidad; 
-
 	END IF;
-
-
     
 	UPDATE detalle_venta SET
 		pedido_venta_id = nNewPedidoVentaId,
-                modelo_id = nNewModeloId,
+		modelo_id = nNewModeloId,
 		cantidad = nNewCantidad
 	WHERE id = nId;
 
@@ -772,14 +695,10 @@ BEGIN
 
 	DECLARE nNewConcesionariaId int;
     
-	IF ISNULL(nConcesionariaId) THEN 
-
-                SELECT concesionaria_id INTO nNewConcesionariaId FROM pedido_venta WHERE id = nId;
-
+	IF ISNULL(nConcesionariaId) THEN
+		SELECT concesionaria_id INTO nNewConcesionariaId FROM pedido_venta WHERE id = nId;
 	ELSE 
-
-                SET nNewConcesionariaId = nConcesionariaId; 
-
+		SET nNewConcesionariaId = nConcesionariaId;
 	END IF;
     
 	UPDATE pedido_venta SET
@@ -862,11 +781,8 @@ BEGIN
 		SET nInsertados = 0;
 
 		WHILE nInsertados < nCantidad DO
-		
-		CALL alta_vehiculo(nModelo_id, pedido_venta_id, 0);
-	
-		SET nInsertados = nInsertados + 1;
-	
+			CALL alta_vehiculo(nModelo_id, pedido_venta_id, 0);
+			SET nInsertados = nInsertados + 1;
 		END WHILE;
 
     END LOOP getDetalle;
