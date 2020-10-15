@@ -423,10 +423,10 @@ proc: BEGIN
 	IF (C = 0) THEN
 		CALL throwMsg(-1, "No se encuentran resultados para el par de IDs");
         LEAVE proc;
-	ELSE
-		-- DELETE FROM pedido_insumo WHERE id = id;
-		DELETE FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = chasisid AND estacion_id = stationid;
 	END IF;
+    
+	-- DELETE FROM pedido_insumo WHERE id = id;
+	DELETE FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = chasisid AND estacion_id = stationid;
 
 	CALL throwMsg(0, "");
 END$$
@@ -482,20 +482,17 @@ CREATE PROCEDURE baja_estacion(id int)
 proc: BEGIN
 
 	DECLARE C INT DEFAULT 0;
-	DECLARE RES INT DEFAULT 0;
-	DECLARE MSG VARCHAR(100) DEFAULT "";
 
 	SELECT COUNT(id) INTO C FROM estacion WHERE id=id;
 
 	IF (C = 0) THEN
-		SET RES = -404;
-		SET MSG = "No se encuentran resultados para ese ID";
+		CALL throwMsg(-1, "No se encuentran resultados para ese ID");
+        LEAVE proc;
 	ELSE
 		DELETE FROM estacion WHERE id=id;
 	END IF;
 
-	SELECT RES AS nResultado, MSG as cMensaje;
-
+	CALL throwMsg(0, "");
 END$$
 
 DROP PROCEDURE IF EXISTS mod_estacion$$
