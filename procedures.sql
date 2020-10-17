@@ -14,15 +14,23 @@ BEGIN
 	SELECT nResultado AS Resultado, cMensaje AS Mensaje;
 END$$
 
+DROP FUNCTION IF EXISTS isNullOrEmpty$$
+CREATE FUNCTION strNullOrEmpty(what VARCHAR(69))
+RETURNS bool DETERMINISTIC
+BEGIN
+	DECLARE ok BOOL DEFAULT false;
+    IF what IS NULL OR what='' THEN SET ok = TRUE; END IF;
+	RETURN ok;
+END$$
+
 -- CONCESIONARIA ----------------------------------------------------------------------
 
 -- Error: que falte un dato
-
 DROP PROCEDURE IF EXISTS alta_concesionaria $$ 
 CREATE PROCEDURE alta_concesionaria(cNombre VARCHAR(100), cDireccion VARCHAR(100))
 proc: BEGIN
 	IF cNombre IS NULL OR cNombre='' OR cDireccion IS NULL OR cDireccion='' THEN
-		CALL throwMsg(-1, "Error: verifique los valores de sus parametros");
+		CALL throwMsg(-1, "Verifique los valores de sus parametros");
         LEAVE proc;
 	END IF;
 	
@@ -328,11 +336,16 @@ END	$$
 DROP PROCEDURE IF EXISTS alta_vehiculo$$
 CREATE PROCEDURE alta_vehiculo(nModeloId int, nPedidoId int, bFinalizado BIT)
 proc: BEGIN
-
+	
+    if nModeloId IS NULL OR nPedidoId IS NULL OR bFinalizado IS NULL THEN
+		CALL throwMsg(-1, "Faltan datos!");
+        LEAVE proc;
+    END IF;
+    
 	INSERT INTO vehiculo(modelo_id, pedido_venta_id, finalizado)
 	VALUES(nModeloId,nPedidoId,bFinalizado);
-    -- TODO
-
+    
+	CALL throwMsg(0, "");
 END$$
 
 DROP PROCEDURE IF EXISTS baja_vehiculo$$
@@ -358,10 +371,17 @@ END$$
 DROP PROCEDURE IF EXISTS mod_vehiculo$$
 CREATE PROCEDURE mod_vehiculo(nId int, nModeloId int, nPedidoId int, bFinalizado BIT)
 proc: BEGIN
-	
 	DECLARE nNewModeloId,nNewPedidoId int;
 	DECLARE bNewFinalizado BIT;
-	
+	DECLARE nCount INT DEFAULT 0;
+
+    SELECT COUNT(num_chasis) INTO nCount FROM vehiculo WHERE vehiculo.num_chasis = id;
+
+    IF (nCount = 0) THEN
+		CALL throwMsg(-1, "No existe vehiculo con la ID dada");
+        LEAVE proc;
+	END IF;
+    
 	IF ISNULL(nModeloId) THEN
 		SELECT modelo_id INTO nNewModeloId FROM vehiculo WHERE num_chasis = nId;
 	ELSE 
@@ -385,7 +405,8 @@ proc: BEGIN
 		pedido_venta_id = nNewPedidoId,
 		finalizado = bNewFinalizado
 	WHERE num_chasis = nId;
-
+	
+    CALL throwMsg(0, "");
 END$$
 
 -- PEDIDO_INSUMO
@@ -395,21 +416,26 @@ END$$
 DROP PROCEDURE IF EXISTS alta_pedido_insumo$$
 CREATE PROCEDURE alta_pedido_insumo(nInsumoId int, nProveedorId int, fCantidad float)
 proc: BEGIN
-
+	
+    IF nInsumoId IS NULL OR nProveedorId IS NULL OR fCantidad IS NULL THEN
+		CALL throwMsg(-1, "Faltan datos!");
+        LEAVE proc;
+    END IF;
+    
 	INSERT INTO pedido_insumo(insumo_id,proveedor_id,cantidad)
 	VALUES(nInsumoId,nProveedorId,fCantidad);
-
+	
+    CALL throwMsg(0, "");
 END$$
 
 DROP PROCEDURE IF EXISTS baja_pedido_insumo$$
 CREATE PROCEDURE baja_pedido_insumo(id int)
 proc: BEGIN
-
-	DECLARE C INT DEFAULT 0;
+	DECLARE nCount INT DEFAULT 0;
 	
-	SELECT COUNT(id) INTO C FROM pedido_insumo WHERE id = id;
+	SELECT COUNT(id) INTO nCount FROM pedido_insumo WHERE id = id;
 	
-	IF (C = 0) THEN
+	IF (nCount = 0) THEN
 		CALL throwMsg(-1, "No se encontraron pedido_insumos con esa ID");
         LEAVE proc;
 	END IF;
@@ -424,8 +450,15 @@ END$$
 DROP PROCEDURE IF EXISTS mod_pedido_insumo$$
 CREATE PROCEDURE mod_pedido_insumo(nId int, nInsumoId int, nProveedorId int, fCantidad float)
 proc: BEGIN
+	DECLARE nCount INT DEFAULT 0;
+    DECLARE nNewInsumoId,nNewProveedorId,fNewCantidad int;
 	
-	DECLARE nNewInsumoId,nNewProveedorId,fNewCantidad int;
+	SELECT COUNT(id) INTO nCount FROM pedido_insumo WHERE id = nId;
+	
+	IF (nCount = 0) THEN
+		CALL throwMsg(-1, "No se encontraron pedido_insumos con esa ID");
+        LEAVE proc;
+	END IF;
 	
 	IF ISNULL(nInsumoId) THEN 
 		SELECT insumo_id INTO nNewInsumoId FROM pedido_insumo WHERE id = nId;
@@ -450,7 +483,8 @@ proc: BEGIN
 		proveedor_id = nNewProveedorId,
 		cantidad = fNewCantidad
 	WHERE id = nId;
-
+    
+	CALL throwMsg(0, "");
 END$$
 
 -- VEHICULO_X_ESTACION
@@ -461,21 +495,26 @@ DROP PROCEDURE IF EXISTS alta_vehiculo_x_estacion$$
 CREATE PROCEDURE alta_vehiculo_x_estacion(nChasisId int, nEstacionId int, dInDate datetime, dOutDate datetime)
 proc: BEGIN
 
+	IF nChasisId IS NULL OR nEstacionId IS NULL OR dInDate IS NULL THEN
+		CALL throwMsg(-1, "Faltan datos!");
+        LEAVE proc;
+    END IF;
+
 	INSERT INTO vehiculo_x_estacion(vehiculo_num_chasis, estacion_id, fecha_ingreso, fecha_egreso)
 	VALUES(nChasisId,nEstacionId,dInDate,dOutDate);
 
+	CALL throwMsg(0, "");
 END$$
 
 
 DROP PROCEDURE IF EXISTS baja_vehiculo_x_estacion$$
 CREATE PROCEDURE baja_vehiculo_x_estacion(chasisid int, stationid int)
 proc: BEGIN
+	DECLARE nCount INT DEFAULT 0;
 
-	DECLARE C INT DEFAULT 0;
+	SELECT COUNT(id) INTO nCount FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = chasisid AND estacion_id = stationid;
 
-	SELECT COUNT(id) INTO C FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = chasisid AND estacion_id = stationid;
-
-	IF (C = 0) THEN
+	IF (nCount = 0) THEN
 		CALL throwMsg(-1, "No se encuentran resultados para el par de IDs");
         LEAVE proc;
 	END IF;
@@ -495,6 +534,14 @@ proc: BEGIN
 	-- newX: Si se modifica el valor de alguna PK, a cual
 	DECLARE nNewEstacionId,nNewCarId int;
 	DECLARE dNewInDate,dNewOutDate datetime;
+   	DECLARE nCount INT DEFAULT 0;
+
+	SELECT COUNT(nOldCarId) INTO nCount FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = nOldCarId AND estacion_id = nOldEstacionId;
+
+	IF (nCount = 0) THEN
+		CALL throwMsg(-1, "No se encuentran resultados para el par de IDs");
+        LEAVE proc;
+	END IF;
     
 	IF ISNULL(nNextCarId) THEN
 		SET nNewCarId = nOldCarId; ELSE SET nNewCarId = nNextCarId; 
@@ -510,7 +557,7 @@ proc: BEGIN
 		SET dNewInDate = dInDate; 
 	END IF;
 
-    -- No hay chequeo para outdate - este puede ser nulo
+    -- No debe haber chequeo para outdate - este puede ser nulo
     
 	UPDATE vehiculo_x_estacion SET
 		vehiculo_num_chasis = nNewCarId,
@@ -530,26 +577,30 @@ END$$
 DROP PROCEDURE IF EXISTS alta_estacion$$
 CREATE PROCEDURE alta_estacion (nLineaMontajeId int, cDescripcion varchar(100))
 proc: BEGIN
-
+    IF nLineaMontajeId IS NULL OR cDescripcion IS NULL THEN
+		CALL throwMsg(-1, "Faltan datos!");
+        LEAVE proc;
+    END IF;
+    
 	INSERT INTO estacion(linea_montaje_id, descripcion)
 	VALUES(nLineaMontajeId, cDescripcion);
 
+	CALL throwMsg(0, "");
 END$$
 
 DROP PROCEDURE IF EXISTS baja_estacion$$
 CREATE PROCEDURE baja_estacion(id int)
 proc: BEGIN
+	DECLARE nCount INT DEFAULT 0;
 
-	DECLARE C INT DEFAULT 0;
+	SELECT COUNT(id) INTO nCount FROM estacion WHERE id=id;
 
-	SELECT COUNT(id) INTO C FROM estacion WHERE id=id;
-
-	IF (C = 0) THEN
+	IF (nCount = 0) THEN
 		CALL throwMsg(-1, "No se encuentran resultados para ese ID");
         LEAVE proc;
-	ELSE
-		DELETE FROM estacion WHERE id=id;
 	END IF;
+    
+	DELETE FROM estacion WHERE id=id;
 
 	CALL throwMsg(0, "");
 END$$
@@ -559,9 +610,16 @@ END$$
 DROP PROCEDURE IF EXISTS mod_estacion$$
 CREATE PROCEDURE mod_estacion(nId int, nLineaMontajeId int, cDescripcion varchar(100))
 proc: BEGIN
-
 	DECLARE nNewLineaMontajeId int;
 	DECLARE cNewDescripcion varchar(100);
+	DECLARE nCount INT DEFAULT 0;
+
+	SELECT COUNT(id) INTO nCount FROM estacion WHERE id=nId;
+
+	IF (nCount = 0) THEN
+		CALL throwMsg(-1, "No se encuentran resultados para ese ID");
+        LEAVE proc;
+	END IF;
     
 	IF ISNULL(nLineaMontajeId) THEN
 		SELECT linea_montaje_id INTO nNewLineaMontajeId FROM estacion WHERE id = nId;
@@ -590,18 +648,32 @@ END$$
 DROP PROCEDURE IF EXISTS alta_detalle_venta$$
 CREATE PROCEDURE alta_detalle_venta (nPedidoVentaId int, modelo_id int, cantidad int)
 proc: BEGIN
+    IF nPedidoVentaId IS NULL OR modelo_id IS NULL OR cantidad IS NULL THEN
+		CALL throwMsg(-1, "Faltan datos!");
+        LEAVE proc;
+    END IF;
 
 	INSERT INTO detalle_venta(pedido_venta_id, modelo_id, cantidad)
 	VALUES(nPedidoVentaId, modelo_id, cantidad);
-
+    
+	CALL throwMsg(0, "");
 END$$
 
 DROP PROCEDURE IF EXISTS baja_detalle_venta$$
 CREATE PROCEDURE baja_detalle_venta(id int)
 proc: BEGIN
+	DECLARE nCount INT DEFAULT 0;
+
+	SELECT COUNT(id) INTO nCount FROM detalle_venta WHERE id=id;
+
+	IF (nCount = 0) THEN
+		CALL throwMsg(-1, "No se encuentran resultados para ese ID");
+        LEAVE proc;
+	END IF;
 
 	DELETE FROM detalle_venta WHERE id = id;
-
+    
+	CALL throwMsg(0, "");
 END$$
 
 -- errores: que el pedido venta o el modelo no existan, que falte un dato, usar caracteres inválidos (números, signos)
@@ -613,6 +685,14 @@ proc: BEGIN
 	DECLARE nNewPedidoVentaId int;
 	DECLARE nNewModeloId int;
 	DECLARE nNewCantidad int;
+	DECLARE nCount INT DEFAULT 0;
+
+	SELECT COUNT(id) INTO nCount FROM detalle_venta WHERE id=id;
+
+	IF (nCount = 0) THEN
+		CALL throwMsg(-1, "No se encuentran resultados para ese ID");
+        LEAVE proc;
+	END IF;
     
 	IF ISNULL(nPedidoVentaId) THEN 
 		 SELECT pedido_venta_id INTO nNewPedidoVentaId FROM detalle_venta WHERE id = nId;
@@ -647,7 +727,7 @@ END$$
 DROP PROCEDURE IF EXISTS alta_pedido_venta$$
 CREATE PROCEDURE alta_pedido_venta (nConcesionariaId int)
 proc: BEGIN
-
+	
 	INSERT INTO pedido_venta(concesionaria_id)
 	VALUES(nConcesionariaId);
 
