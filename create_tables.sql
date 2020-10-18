@@ -41,7 +41,7 @@ CREATE TABLE `pedido_venta` (
 	`id` INT primary key AUTO_INCREMENT,
 	`concesionaria_id` int not null,
 	`fecha_entrega` date,
-	`finalizado` bit not null,
+	`finalizado` bit not null DEFAULT 0,
 	foreign key (concesionaria_id) references concesionaria(id)
 );
 
@@ -61,10 +61,12 @@ CREATE TABLE `linea_montaje` (
 	foreign key (modelo_id) references modelo(id)
 );
 
+
 CREATE TABLE `estacion` (
-	`id` INT primary key AUTO_INCREMENT,
+	`id` INT not null,
 	`linea_montaje_id` int not null,
 	`descripcion` varchar(100) not null,
+	primary key (id, linea_montaje_id),
 	foreign key (linea_montaje_id) references linea_montaje(id)
 );
 
@@ -100,19 +102,23 @@ CREATE TABLE `proveedor_x_insumo` (
 
 CREATE TABLE `insumo_x_estacion` (
 	`estacion_id` int not null,
+	`linea_montaje_id` int not null,
 	`insumo_id` int not null,
-	primary key (estacion_id, insumo_id),
+	primary key (estacion_id, linea_montaje_id, insumo_id),
 	`cantidad` float not null,
 	foreign key (estacion_id) references estacion(id),
+	foreign key (linea_montaje_id) references linea_montaje(id),
 	foreign key (insumo_id) references insumo(id)
 );
 
 CREATE TABLE `vehiculo_x_estacion` (
 	`vehiculo_num_chasis` int not null,
 	`estacion_id` int not null,
-	primary key (vehiculo_num_chasis, estacion_id),
+	`linea_montaje_id` int not null,
+	primary key (vehiculo_num_chasis, estacion_id, linea_montaje_id),
 	`fecha_ingreso` datetime not null,
   `fecha_egreso` datetime,
 	foreign key (vehiculo_num_chasis) references vehiculo(num_chasis),
+	foreign key (linea_montaje_id) references linea_montaje(id),
 	foreign key (estacion_id) references estacion(id)
 );
