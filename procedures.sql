@@ -70,6 +70,7 @@ BEGIN
 	CALL existsRowInTable(sTable, sIdCol, iIdVal);
     IF @result = true THEN CALL throwMsg(-1, sErr); END IF;
 END$$
+
 DROP PROCEDURE IF EXISTS proxy_errorOnMissing$$
 CREATE PROCEDURE proxy_errorOnMissing(IN sTable VARCHAR(69), IN sIdCol VARCHAR(69), IN iIdVal int, IN sErr VARCHAR(100))
 BEGIN
@@ -186,7 +187,7 @@ proc: BEGIN
 	SET nInsertados = 0;
 	
 	WHILE nInsertados < nCantidadEstaciones DO
-		CALL alta_estacion(nLineaMontajeId, 'descripcion');
+		CALL alta_estacion(nInsertados, nLineaMontajeId, 'descripcion');
 		SET nInsertados = nInsertados + 1;
 	END WHILE;
 
@@ -494,7 +495,7 @@ END$$
 -- error: que falte un dato, que la fecha de egreso sea anterior a la de ingreso
 
 DROP PROCEDURE IF EXISTS alta_vehiculo_x_estacion$$
-CREATE PROCEDURE alta_vehiculo_x_estacion(nChasisId int, nEstacionId int, dInDate datetime, dOutDate datetime)
+CREATE PROCEDURE alta_vehiculo_x_estacion(nChasisId int, nEstacionId int, nLineaMontajeId int, dInDate datetime, dOutDate datetime)
 proc: BEGIN
 	-- TODO: Talvez tirar error si se ingresan IDs que no existen en las respectivas tablas? Esto repetido para las otras
     -- TODO: dInDate < dOutDate
@@ -502,74 +503,65 @@ proc: BEGIN
 		CALL throwMsg(-1, "Faltan datos!");
         LEAVE proc;
     END IF;
-    CALL existsRowInTable2("vehiculo_x_estacion", "vehiculo_num_chasis", nChasisId, "estacion_id", nEstacionId);
-    IF @result = true THEN
-		CALL throwMsg(-1, "Este par ya existe!");
-        LEAVE proc;
-    END IF;
-
-	INSERT INTO vehiculo_x_estacion(vehiculo_num_chasis, estacion_id, fecha_ingreso, fecha_egreso)
-	VALUES(nChasisId,nEstacionId,dInDate,dOutDate);
+   
+	INSERT INTO vehiculo_x_estacion(vehiculo_num_chasis, estacion_id, linea_montaje_id, fecha_ingreso, fecha_egreso)
+	VALUES(nChasisId,nEstacionId,nLineaMontajeId,dInDate,dOutDate);
 
 	CALL throwMsg(0, "");
-END$$
+END $$
 
--- existsRowInTable(sTable VARCHAR(69), sIdCol VARCHAR(69), iIdVal int)
 DROP PROCEDURE IF EXISTS baja_vehiculo_x_estacion$$
-CREATE PROCEDURE baja_vehiculo_x_estacion(nChasisId int, nEstacionId int)
+CREATE PROCEDURE baja_vehiculo_x_estacion(nChasisId int, nEstacionId int, nLineaMontajeId int)
 proc: BEGIN
-	CALL existsRowInTable2("vehiculo_x_estacion", "vehiculo_num_chasis", nChasisId, "estacion_id", nEstacionId);
-    IF @result = false THEN
-		CALL throwMsg(-1, "No se encuentran resultados para el par de IDs");
-        LEAVE proc;
-    END IF;
-    
-	DELETE FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = nChasisId AND estacion_id = nEstacionId;
+	
+	DECLARE C INT DEFAULT 0;
+	
+    SELECT COUNT(id) INTO C FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = nChasisId AND estacion_id = nEstacionId AND linea_montaje_id = nLineaMontajeId;
+    IF (C = 0) THEN
+		CALL throwMsg(-1, "No se encuentra el registro");
+		LEAVE proc;
+	END IF;
+	
+    DELETE FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = nChasisId AND estacion_id = nEstacionId AND linea_montaje_id = nLineaMontajeId;
 
-	CALL throwMsg(0, "");
-END$$
+    CALL throwMsg(0, "");
+END $$
 
 -- errores: que el vehículo o la estación no existan, que falte un dato, usar caracteres inválidos (números, signos)
--- TODO: eso
-DROP PROCEDURE IF EXISTS mod_vehiculo_x_estacion$$
-CREATE PROCEDURE mod_vehiculo_x_estacion(nOldCarId int, nOldEstacionId int, nNextCarId int, nNextEstacionId int, nInDate datetime, dOutDate datetime)
+-- TODO: eso, y tener en cuenta nLineaMontajeId como en los procedimientos de arriba
+DROP PROCEDURE IF EXISTS mod_vehiculo_x_estacion $$
+ CREATE PROCEDURE mod_vehiculo_x_estacion(nChasisId, nLineaMontajeId, nEstacionId, dFechaIngreso datetime, dFechaEgreso datetime)
 proc: BEGIN
-	-- oldX: Se modificara la entrada que tenga este par de PKs
-	-- newX: Si se modifica el valor de alguna PK, a cual
-	DECLARE nNewEstacionId,nNewCarId int;
-	DECLARE dNewInDate,dNewOutDate datetime;
     
-	CALL existsRowInTable2("vehiculo_x_estacion", "vehiculo_num_chasis", nOldCarId, "estacion_id", nOldEstacionId); -- Sin probar
-    IF @result = false THEN
-		CALL throwMsg(-1, "No se encuentran resultados para el par de IDs");
-        LEAVE proc;
+	DECLARE C INT DEFAULT 0;
+	DECLARE dNewFechaIngreso datetime;
+
+	SELECT COUNT(vehiculo_num_chasis) FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = nChasisId AND linea_montaje_id = nLineaMontajeId
+	AND estacion_id = nEstacionId;
+
+	IF C = 0 THEN
+		throwMsg(-1, "No se encuentra el registro");
+		LEAVE proc;
     END IF;
-    
-	IF ISNULL(nNextCarId) THEN
-		SET nNewCarId = nOldCarId; ELSE SET nNewCarId = nNextCarId; 
-	END IF;
+	
 
-	IF ISNULL(nNextEstacionId) THEN 
-		SET nNewEstacionId = nOldEstacionId; ELSE SET nNewEstacionId = nNextEstacionId; 
-	END IF;
-
-	IF ISNULL(dInDate) THEN 
-		SELECT fecha_ingreso INTO dNewInDate FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = id;
+	IF ISNULL(dFechaIngreso) THEN 
+		SELECT fecha_ingreso INTO dNewFechaIngreso FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = nChasisId AND linea_montaje_id = nLineaMontajeId
+		AND estacion_id = nEstacionId;
 	ELSE 
-		SET dNewInDate = dInDate; 
+		SET dNewFechaIngreso = dFechaIngreso; 
 	END IF;
 
     -- No debe haber chequeo para outdate - este puede ser nulo
     
 	UPDATE vehiculo_x_estacion SET
-		vehiculo_num_chasis = nNewCarId,
-		estacion_id = nNewEstacionId,
-		fecha_ingreso = dNewIndate,
-		fecha_egreso = dNewOutDate
-	WHERE vehiculo_num_chasis = nOldCarId AND estacion_id = nOldEstacionId;
+		fecha_ingreso = dNewFechaIngreso,
+		fecha_egreso = dFechaEgreso
+	WHERE vehiculo_num_chasis = nChasisId AND linea_montaje_id = nLineaMontajeId
+	AND estacion_id = nEstacionId;
 
 	CALL throwMsg(0, "");
-END$$
+END $$
 
 
 -- ESTACIÓN
@@ -577,8 +569,9 @@ END$$
 -- error: que falte un dato
 
 DROP PROCEDURE IF EXISTS alta_estacion$$
-CREATE PROCEDURE alta_estacion (nLineaMontajeId int, cDescripcion varchar(100))
+CREATE PROCEDURE alta_estacion (nId int, nLineaMontajeId int, cDescripcion varchar(100))
 proc: BEGIN
+	
 	-- CALL proxy_errorOnMissing("linea_montaje", "id", nLineaMontaje, CONCAT("La linea de montaje ", nLineaMontajeId, " no existe!"));
 	-- IF @result = false THEN LEAVE proc; END IF;
 
@@ -586,54 +579,54 @@ proc: BEGIN
 		CALL throwMsg(-1, "Faltan datos!");
         LEAVE proc;
     END IF;
-    
-	INSERT INTO estacion(linea_montaje_id, descripcion)
-	VALUES(nLineaMontajeId, cDescripcion);
-
+	
+	INSERT INTO estacion(id, linea_montaje_id, descripcion)
+	VALUES(nId, nLineaMontajeId, cDescripcion);
+	
 	CALL throwMsg(0, "");
-END$$
+END $$
 
 DROP PROCEDURE IF EXISTS baja_estacion$$
-CREATE PROCEDURE baja_estacion(nId int)
+CREATE PROCEDURE baja_estacion(nId int, nLineaMontajeId int)
 proc: BEGIN
-	CALL proxy_errorOnMissing("estacion", "id", nId, null);
-	IF @result = false THEN LEAVE proc; END IF;
-    
-	DELETE FROM estacion WHERE id=nId;
 
-	CALL throwMsg(0, "");
-END$$
+    CALL existsRowInTable2("estacion", "id", nId, "linea_montaje_id", nLineaMontajeId);
+    IF @result = false THEN
+		CALL throwMsg(-1, "No se encuentran resultados para el par de IDs");
+        LEAVE proc;
+    END IF;
+	
+    DELETE FROM estacion WHERE estacion.id=nId AND estacion.linea_montaje_id = nLineaMontajeId;
 
--- errores: que la estación no exista, que falte un dato, usar caracteres inválidos (números, signos)
+    CALL throwMsg(0,"");
+END $$
 
 DROP PROCEDURE IF EXISTS mod_estacion$$
 CREATE PROCEDURE mod_estacion(nId int, nLineaMontajeId int, cDescripcion varchar(100))
 proc: BEGIN
-	DECLARE nNewLineaMontajeId int;
-	DECLARE cNewDescripcion varchar(100);
-    
-	CALL proxy_errorOnMissing("estacion", "id", nId, null);
-	IF @result = false THEN LEAVE proc; END IF;
-    
-	IF ISNULL(nLineaMontajeId) THEN
-		SELECT linea_montaje_id INTO nNewLineaMontajeId FROM estacion WHERE id = nId;
-	ELSE 
-		SET nNewLineaMontajeId = nLineaMontajeId; 
-	END IF;
+	
+   DECLARE new_descripcion varchar(100);
+   DECLARE C INT DEFAULT 0;
 
-	IF ISNULL(cDescripcion) THEN
-		SELECT descripcion INTO cNewDescripcion FROM estacion WHERE id = nId;
-	ELSE 
-		SET cNewDescripcion = cDescripcion; 
-	END IF;
+    SELECT COUNT(id) INTO C FROM estacion e WHERE e.id=nId AND e.linea_montaje_id = nLineaMontajeId;
+
+    IF (C = 0) THEN
+
+		CALL throwMsg(-1, "No se encuentra esa estacion");
+		LEAVE proc;
+	
+    END IF;
+    
+    IF ISNULL(cDescripcion) THEN SELECT descripcion INTO new_descripcion FROM estacion WHERE id = nId AND linea_montaje_id = nLineaMontajeId;
+    ELSE SET new_descripcion = cDescripcion; END IF;
+   
     
 	UPDATE estacion SET
-		 linea_montaje_id = new_linea_montaje_id,
-		 descripcion = cNewDescripcion
-	WHERE id = nId;
-	
-    CALL throwMsg(0, "");
-END$$
+		descripcion = new_descripcion
+	WHERE id = nId AND linea_montaje_id = nLineaMontajeId;
+
+	CALL throwMsg(0,"");
+END $$
 
 
 -- DETALLE_VENTA
@@ -724,7 +717,7 @@ END$$
 
 DROP PROCEDURE IF EXISTS baja_pedido_venta$$
 CREATE PROCEDURE baja_pedido_venta(nId int)
-BEGIN
+proc: BEGIN
 	CALL proxy_errorOnMissing("pedido_venta", "id", nId, null);
 	IF @result = false THEN LEAVE proc; END IF;
 
@@ -816,9 +809,9 @@ END$$
 
 -- BUSINESS
 
-DROP PROCEDURE IF EXISTS comenzar_ensamblado$$
-CREATE PROCEDURE comenzar_ensamblado(pedido_venta_id INT)
-proc: BEGIN
+DROP PROCEDURE IF EXISTS asignar_linea_pedido$$ -- PUNTO 8
+CREATE PROCEDURE asignar_linea_pedido(pedido_venta_id INT)
+BEGIN
 
 	DECLARE finished INT DEFAULT 0;
 	DECLARE nCantidad INT; 
@@ -829,7 +822,7 @@ proc: BEGIN
         CURSOR FOR
             SELECT modelo_id, cantidad FROM detalle_venta WHERE detalle_venta.pedido_venta_id = pedido_venta_id;
  	
-	DECLARE CONTINUE HANDLER
+    DECLARE CONTINUE HANDLER
         FOR NOT FOUND SET finished = 1;
        
     -- CALL log_msg('help'); 
@@ -847,14 +840,40 @@ proc: BEGIN
 		SET nInsertados = 0;
 
 		WHILE nInsertados < nCantidad DO
-			CALL alta_vehiculo(nModelo_id, pedido_venta_id, 0);
-			SET nInsertados = nInsertados + 1;
+		
+		CALL alta_vehiculo(nModelo_id, pedido_venta_id, 0);
+	
+		SET nInsertados = nInsertados + 1;
+	
 		END WHILE;
 
     END LOOP getDetalle;
 
     CLOSE cursor_detalle_venta;
-END$$
+END $$
+
+DROP PROCEDURE IF EXISTS iniciar_ensamblado $$ -- PUNTO 9
+CREATE PROCEDURE iniciar_ensamblado(nChasisId INT)
+proc: BEGIN
+	
+	DECLARE linea_montaje_ref int;
+	DECLARE nChasisEstacionId int DEFAULT 0;
+	
+	SELECT modelo_id INTO linea_montaje_ref FROM vehiculo WHERE num_chasis = nChasisId;
+    
+	SELECT vehiculo_num_chasis INTO nChasisEstacionId FROM vehiculo_x_estacion vxe WHERE vxe.linea_montaje_id = linea_montaje_ref AND vxe.estacion_id = 1 AND 
+	vxe.fecha_egreso is null;
+	-- se busca si hay un vehiculo metido en la estacion sin haber salido
+	IF nChasisEstacionId > 0 THEN
+		
+		CALL throwMsg(-1, CONCAT("Todavia hay un vehiculo (id chasis: ",nChasisEstacionId,") en la estacion"));
+		LEAVE proc;
+	END IF;
+	
+	CALL alta_vehiculo_x_estacion(nChasisId, 0, linea_montaje_ref, NOW() , null);
+	
+	CALL throwMsg(0, "");
+END $$
 
 
 DELIMITER ;
