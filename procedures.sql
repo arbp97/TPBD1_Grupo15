@@ -529,46 +529,40 @@ END $$
 
 -- errores: que el vehículo o la estación no existan, que falte un dato, usar caracteres inválidos (números, signos)
 -- TODO: eso, y tener en cuenta nLineaMontajeId como en los procedimientos de arriba
-/* DROP PROCEDURE IF EXISTS mod_vehiculo_x_estacion$$
- CREATE PROCEDURE mod_vehiculo_x_estacion(nOldCarId int, nOldEstacionId int, nNextCarId int, nNextEstacionId int, nInDate datetime, dOutDate datetime)
+DROP PROCEDURE IF EXISTS mod_vehiculo_x_estacion $$
+ CREATE PROCEDURE mod_vehiculo_x_estacion(nChasisId, nLineaMontajeId, nEstacionId, dFechaIngreso datetime, dFechaEgreso datetime)
 proc: BEGIN
-	-- oldX: Se modificara la entrada que tenga este par de PKs
-	-- newX: Si se modifica el valor de alguna PK, a cual
-	DECLARE nNewEstacionId,nNewCarId int;
-	DECLARE dNewInDate,dNewOutDate datetime;
     
-	CALL existsRowInTable2("vehiculo_x_estacion", "vehiculo_num_chasis", nOldCarId, "estacion_id", nOldEstacionId); -- Sin probar
-    IF @result = false THEN
-		CALL throwMsg(-1, "No se encuentran resultados para el par de IDs");
-        LEAVE proc;
+	DECLARE C INT DEFAULT 0;
+	DECLARE dNewFechaIngreso datetime;
+
+	SELECT COUNT(vehiculo_num_chasis) FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = nChasisId AND linea_montaje_id = nLineaMontajeId
+	AND estacion_id = nEstacionId;
+
+	IF C = 0 THEN
+		throwMsg(-1, "No se encuentra el registro");
+		LEAVE proc;
     END IF;
-    
-	IF ISNULL(nNextCarId) THEN
-		SET nNewCarId = nOldCarId; ELSE SET nNewCarId = nNextCarId; 
-	END IF;
+	
 
-	IF ISNULL(nNextEstacionId) THEN 
-		SET nNewEstacionId = nOldEstacionId; ELSE SET nNewEstacionId = nNextEstacionId; 
-	END IF;
-
-	IF ISNULL(dInDate) THEN 
-		SELECT fecha_ingreso INTO dNewInDate FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = id;
+	IF ISNULL(dFechaIngreso) THEN 
+		SELECT fecha_ingreso INTO dNewFechaIngreso FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = nChasisId AND linea_montaje_id = nLineaMontajeId
+		AND estacion_id = nEstacionId;
 	ELSE 
-		SET dNewInDate = dInDate; 
+		SET dNewFechaIngreso = dFechaIngreso; 
 	END IF;
 
     -- No debe haber chequeo para outdate - este puede ser nulo
     
 	UPDATE vehiculo_x_estacion SET
-		vehiculo_num_chasis = nNewCarId,
-		estacion_id = nNewEstacionId,
-		fecha_ingreso = dNewIndate,
-		fecha_egreso = dNewOutDate
-	WHERE vehiculo_num_chasis = nOldCarId AND estacion_id = nOldEstacionId;
+		fecha_ingreso = dNewFechaIngreso,
+		fecha_egreso = dFechaEgreso
+	WHERE vehiculo_num_chasis = nChasisId AND linea_montaje_id = nLineaMontajeId
+	AND estacion_id = nEstacionId;
 
 	CALL throwMsg(0, "");
-END$$
-*/
+END $$
+
 
 -- ESTACIÓN
 
