@@ -807,6 +807,152 @@ proc: BEGIN
     CALL throwMsg(0, "");
 END$$
 
+
+-- PROVEEDOR_X_INSUMO
+
+-- error: ?
+
+DROP PROCEDURE IF EXISTS alta_proveedor_x_insumo$$
+CREATE PROCEDURE alta_proveedor_x_insumo(nInsumoId int, nProveedorId int, precio float)
+proc: BEGIN
+	-- TODO: Talvez tirar error si se ingresan IDs que no existen en las respectivas tablas? Esto repetido para las otras
+    -- TODO: dInDate < dOutDate
+	IF nInsumoId IS NULL OR nProveedorId IS NULL OR precio IS NULL THEN
+		CALL throwMsg(-1, "Faltan datos!");
+        LEAVE proc;
+    END IF;
+   
+	INSERT INTO proveedor_x_insumo(insumo_id, proveedor_id, precio)
+	VALUES(nInsumoId,nProveedorId,precio);
+
+	CALL throwMsg(0, "");
+END $$
+
+DROP PROCEDURE IF EXISTS baja_proveedor_x_insumo$$
+CREATE PROCEDURE baja_proveedor_x_insumo(nInsumoId int, nProveedorId int)
+proc: BEGIN
+	
+	DECLARE C INT DEFAULT 0;
+	
+    SELECT COUNT(id) INTO C FROM proveedor_x_insumo WHERE insumo_id = nInsumoId AND proveedor_id = nProveedorId;
+    IF (C = 0) THEN
+		CALL throwMsg(-1, "No se encuentra el registro");
+		LEAVE proc;
+	END IF;
+	
+    DELETE FROM proveedor_x_insumo WHERE insumo_id = nInsumoId AND proveedor_id = nProveedorId;
+
+    CALL throwMsg(0, "");
+END $$
+
+-- errores: ?
+DROP PROCEDURE IF EXISTS mod_proveedor_x_insumo $$
+ CREATE PROCEDURE mod_proveedor_x_insumo(nInsumoId int, nProveedorId int, precio float)
+proc: BEGIN
+	-- TODO: No me dieron ganas de permitir la modificacion de PKs ahora
+    
+	DECLARE C INT DEFAULT 0;
+	DECLARE fNewPrecio float;
+
+	SELECT COUNT(insumo_id) FROM proveedor_x_insumo WHERE insumo_id = nInsumoId AND proveedor_id = nProveedorId;
+
+	IF C = 0 THEN
+		CALL throwMsg(-1, "No se encuentra el registro");
+		LEAVE proc;
+    END IF;
+	
+	IF ISNULL(precio) THEN 
+		SELECT precio INTO dNewPrecio FROM proveedor_x_insumo WHERE insumo_id = nInsumoId AND proveedor_id = nProveedorId;
+	ELSE 
+		SET fNewPrecio = precio; 
+	END IF;
+    
+	UPDATE proveedor_x_insumo SET
+		precio = fNewPrecio
+	WHERE insumo_id = nInsumoId AND proveedor_id = nProveedorId;
+
+	CALL throwMsg(0, "");
+END $$
+
+-- INSUMO_x_ESTACION
+-- error: ?
+
+DROP PROCEDURE IF EXISTS alta_insumo_x_estacion$$
+CREATE PROCEDURE alta_insumo_x_estacion(nInsumoId int, nEstacionId int, nLineaMontajeId int, nCantidad float)
+proc: BEGIN
+	IF nInsumoId IS NULL OR nEstacionId IS NULL OR nLineaMontajeId IS NULL OR nCantidad IS NULL THEN
+		CALL throwMsg(-1, "Faltan datos!");
+        LEAVE proc;
+    END IF;
+   
+	INSERT INTO vehiculo_x_estacion(insumo_id, estacion_id, linea_montaje_id, cantidad)
+	VALUES(nChasisId,nEstacionId,nLineaMontajeId,nCantidad);
+
+	CALL throwMsg(0, "");
+END $$
+
+DROP PROCEDURE IF EXISTS baja_insumo_x_estacion$$
+CREATE PROCEDURE baja_insumo_x_estacion(nInsumoId int, nEstacionId int, nLineaMontajeId int, nCantidad float)
+proc: BEGIN
+	
+	DECLARE C INT DEFAULT 0;
+	
+    SELECT COUNT(id) INTO C FROM insumo_x_estacion WHERE insumo_id = nInsumoId AND estacion_id = nEstacionId AND linea_montaje_id = nLineaMontajeId;
+    IF (C = 0) THEN
+		CALL throwMsg(-1, "No se encuentra el registro");
+		LEAVE proc;
+	END IF;
+	
+    DELETE FROM insumo_x_estacion WHERE insumo_id = nInsumoId AND estacion_id = nEstacionId AND linea_montaje_id = nLineaMontajeId;
+
+    CALL throwMsg(0, "");
+END $$
+
+-- errores: que el vehículo o la estación no existan, que falte un dato, usar caracteres inválidos (números, signos)
+-- TODO: eso, y tener en cuenta nLineaMontajeId como en los procedimientos de arriba
+DROP PROCEDURE IF EXISTS mod_insumo_x_estacion $$
+ CREATE PROCEDURE mod_insumo_x_estacion(nInsumoId int, nEstacionId int, nLineaMontajeId int, nCantidad float)
+proc: BEGIN
+    
+	DECLARE C INT DEFAULT 0;
+	DECLARE nNewCantidad int;
+
+	SELECT COUNT(insumo_id) FROM insumo_x_estacion WHERE insumo_id = nInsumoId AND linea_montaje_id = nLineaMontajeId
+	AND estacion_id = nEstacionId;
+
+	IF C = 0 THEN
+		CALL throwMsg(-1, "No se encuentra el registro");
+		LEAVE proc;
+    END IF;
+	
+
+	IF ISNULL(nCantidad) THEN 
+		SELECT cantidad INTO nNewCantidad FROM insumo_x_estacion WHERE insumo_id = nInsumoId AND linea_montaje_id = nLineaMontajeId
+		AND estacion_id = nEstacionId;
+	ELSE 
+		SET nNewCantidad = cantidad; 
+	END IF;
+
+    -- No debe haber chequeo para outdate - este puede ser nulo
+    
+	UPDATE insumo_x_estacion SET
+		cantidad = nNewCantidad
+	WHERE insumo_id = nInsumoId AND linea_montaje_id = nLineaMontajeId
+	AND estacion_id = nEstacionId;
+
+	CALL throwMsg(0, "");
+END $$
+
+
+
+
+
+
+
+
+
+
+
 -- BUSINESS
 
 DROP PROCEDURE IF EXISTS asignar_linea_pedido$$ -- PUNTO 8
