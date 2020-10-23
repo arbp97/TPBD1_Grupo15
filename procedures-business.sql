@@ -52,8 +52,9 @@ proc: BEGIN
 	
 	SELECT modelo_id INTO linea_montaje_ref FROM vehiculo WHERE num_chasis = nChasisId;
     
-	SELECT vehiculo_num_chasis INTO nChasisEstacionId FROM vehiculo_x_estacion vxe WHERE vxe.linea_montaje_id = linea_montaje_ref AND vxe.estacion_id = 1 AND 
-	vxe.fecha_egreso is null;
+	SELECT vehiculo_num_chasis INTO nChasisEstacionId FROM vehiculo_x_estacion vxe WHERE vxe.linea_montaje_id = linea_montaje_ref
+	AND vxe.estacion_id = 0 
+	AND vxe.fecha_egreso is null;
 	-- se busca si hay un vehiculo metido en la estacion sin haber salido
 	IF nChasisEstacionId > 0 THEN
 		
@@ -67,9 +68,52 @@ proc: BEGIN
 END $$
 
 DROP PROCEDURE IF EXISTS avanzar_estacion
-CREATE PROCEDURE avanzar_estacion(nChasisId INT)
+CREATE PROCEDURE avanzar_estacion(nChasisId INT) -- PUNTO 10 -- needs testing
 proc: BEGIN
-    -- todo
+    
+	DECLARE linea_montaje_ref int;
+	DECLARE nCantEstacionesLinea int DEFAULT 0; -- TEMP cambiar por max() ?
+	DECLARE nCurrentEstacionId int DEFAULT -1;
+	DECLARE nChasisEstacionId int DEFAULT 0; -- chasis dentro de la estacion siguiente
+	
+	-- conseguir linea de montaje del modelo del vehiculo
+	SELECT modelo_id INTO linea_montaje_ref FROM vehiculo WHERE num_chasis = nChasisId;
+
+	-- TEMP get cant estaciones 
+	SELECT COUNT(id) INTO nCantEstacionesLinea FROM estacion WHERE linea_montaje_id = linea_montaje_ref;
+
+	-- conseguir la estacion en la cual estaria el vehiculo actualmente
+	SELECT estacion_id INTO nCurrentEstacionId FROM vehiculo_x_estacion WHERE num_chasis = nChasisId
+	AND linea_montaje_id = linea_montaje_ref
+	AND fecha_egreso = null;
+
+	IF nCurrentEstacionId = -1 THEN
+		throwMsg(-1, "El vehiculo todavia no está en producción.");
+		LEAVE proc;
+	END IF;
+
+	IF (nCurrentEstacionId+1) < nCantEstacionesLinea THEN
+		
+		SELECT vehiculo_num_chasis INTO nChasisEstacionId FROM vehiculo_x_estacion vxe WHERE vxe.linea_montaje_id = linea_montaje_ref 
+		AND vxe.estacion_id = (nCurrentEstacionId+1) 
+		AND vxe.fecha_egreso = null;
+
+		-- se busca si hay un vehiculo metido en la estacion sin haber salido
+		IF nChasisEstacionId > 0 THEN
+			CALL throwMsg(-1, CONCAT("Todavia hay un vehiculo (id chasis: ",nChasisEstacionId,") en la estacion"));
+		LEAVE proc;
+		END IF;
+
+		CALL alta_vehiculo_x_estacion(nChasisId, (nCurrentEstacionId+1), linea_montaje_ref, NOW() , null);
+
+	ELSE
+		CALL mod_vehiculo(nChasisId, null, null, 1); -- vehiculo finalizado
+	END IF;
+    
+	-- vehiculo sale de la estacion
+	CALL  mod_vehiculo_x_estacion(nChasisId, linea_montaje_ref, nCurrentEstacionId, null, NOW());
+
+	CALL throwMsg(0, "");
 END $$
 
 

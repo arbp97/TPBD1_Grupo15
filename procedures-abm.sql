@@ -452,7 +452,7 @@ END $$
 -- errores: que el vehículo o la estación no existan, que falte un dato, usar caracteres inválidos (números, signos)
 -- TODO: eso, y tener en cuenta nLineaMontajeId como en los procedimientos de arriba
 DROP PROCEDURE IF EXISTS mod_vehiculo_x_estacion $$
- CREATE PROCEDURE mod_vehiculo_x_estacion(nChasisId, nLineaMontajeId, nEstacionId, dFechaIngreso datetime, dFechaEgreso datetime)
+ CREATE PROCEDURE mod_vehiculo_x_estacion(nChasisId int, nLineaMontajeId int, nEstacionId int, dFechaIngreso datetime, dFechaEgreso datetime)
 proc: BEGIN
     
 	DECLARE C INT DEFAULT 0;
