@@ -1,3 +1,5 @@
+use automotriz;
+
 DELIMITER $$
 
 /*
@@ -458,11 +460,11 @@ proc: BEGIN
 	DECLARE C INT DEFAULT 0;
 	DECLARE dNewFechaIngreso datetime;
 
-	SELECT COUNT(vehiculo_num_chasis) FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = nChasisId AND linea_montaje_id = nLineaMontajeId
+	SELECT COUNT(vehiculo_num_chasis) INTO C FROM vehiculo_x_estacion WHERE vehiculo_num_chasis = nChasisId AND linea_montaje_id = nLineaMontajeId
 	AND estacion_id = nEstacionId;
 
 	IF C = 0 THEN
-		throwMsg(-1, "No se encuentra el registro");
+		CALL throwMsg(-1, "No se encuentra el registro");
 		LEAVE proc;
     END IF;
 	
@@ -771,7 +773,7 @@ END $$
 DROP PROCEDURE IF EXISTS mod_proveedor_x_insumo $$
  CREATE PROCEDURE mod_proveedor_x_insumo(nInsumoId int, nProveedorId int, precio float)
 proc: BEGIN
-	-- TODO: No me dieron ganas de permitir la modificacion de PKs ahora
+	-- TODO: No me dieron ganas de permitir la modificacion de PKs ahora / no tiene que ser asi tampoco salame
     
 	DECLARE C INT DEFAULT 0;
 	DECLARE fNewPrecio float;
@@ -784,7 +786,7 @@ proc: BEGIN
     END IF;
 	
 	IF ISNULL(precio) THEN 
-		SELECT precio INTO dNewPrecio FROM proveedor_x_insumo WHERE insumo_id = nInsumoId AND proveedor_id = nProveedorId;
+		SELECT precio INTO fNewPrecio FROM proveedor_x_insumo WHERE insumo_id = nInsumoId AND proveedor_id = nProveedorId;
 	ELSE 
 		SET fNewPrecio = precio; 
 	END IF;
@@ -831,7 +833,6 @@ proc: BEGIN
 END $$
 
 -- errores: que el vehículo o la estación no existan, que falte un dato, usar caracteres inválidos (números, signos)
--- TODO: eso, y tener en cuenta nLineaMontajeId como en los procedimientos de arriba
 DROP PROCEDURE IF EXISTS mod_insumo_x_estacion $$
  CREATE PROCEDURE mod_insumo_x_estacion(nInsumoId int, nEstacionId int, nLineaMontajeId int, nCantidad float)
 proc: BEGIN

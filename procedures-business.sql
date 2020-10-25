@@ -1,3 +1,5 @@
+use automotriz;
+
 DELIMITER $$
 
 DROP PROCEDURE IF EXISTS asignar_linea_pedido$$ -- PUNTO 8
@@ -67,7 +69,7 @@ proc: BEGIN
 	CALL throwMsg(0, "");
 END $$
 
-DROP PROCEDURE IF EXISTS avanzar_estacion
+DROP PROCEDURE IF EXISTS avanzar_estacion $$
 CREATE PROCEDURE avanzar_estacion(nChasisId INT) -- PUNTO 10 -- needs testing
 proc: BEGIN
     
@@ -77,18 +79,18 @@ proc: BEGIN
 	DECLARE nChasisEstacionId int DEFAULT 0; -- chasis dentro de la estacion siguiente
 	
 	-- conseguir linea de montaje del modelo del vehiculo
-	SELECT modelo_id INTO linea_montaje_ref FROM vehiculo WHERE num_chasis = nChasisId;
+	SELECT modelo_id INTO linea_montaje_ref FROM vehiculo WHERE vehiculo.num_chasis = nChasisId;
 
 	-- TEMP get cant estaciones 
 	SELECT COUNT(id) INTO nCantEstacionesLinea FROM estacion WHERE linea_montaje_id = linea_montaje_ref;
 
 	-- conseguir la estacion en la cual estaria el vehiculo actualmente
-	SELECT estacion_id INTO nCurrentEstacionId FROM vehiculo_x_estacion WHERE num_chasis = nChasisId
-	AND linea_montaje_id = linea_montaje_ref
-	AND fecha_egreso = null;
+	SELECT estacion_id INTO nCurrentEstacionId FROM vehiculo_x_estacion WHERE vehiculo_x_estacion.vehiculo_num_chasis = nChasisId
+	AND vehiculo_x_estacion.linea_montaje_id = linea_montaje_ref
+	AND fecha_egreso is null;
 
 	IF nCurrentEstacionId = -1 THEN
-		throwMsg(-1, "El vehiculo todavia no está en producción.");
+		CALL throwMsg(-1, "El vehiculo todavia no está en producción.");
 		LEAVE proc;
 	END IF;
 
@@ -96,7 +98,7 @@ proc: BEGIN
 		
 		SELECT vehiculo_num_chasis INTO nChasisEstacionId FROM vehiculo_x_estacion vxe WHERE vxe.linea_montaje_id = linea_montaje_ref 
 		AND vxe.estacion_id = (nCurrentEstacionId+1) 
-		AND vxe.fecha_egreso = null;
+		AND vxe.fecha_egreso is null;
 
 		-- se busca si hay un vehiculo metido en la estacion sin haber salido
 		IF nChasisEstacionId > 0 THEN

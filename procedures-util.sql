@@ -1,3 +1,5 @@
+use automotriz;
+
 DELIMITER $$
 
 -- DEBUG / ignore
