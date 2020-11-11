@@ -567,9 +567,11 @@ proc: BEGIN
 
 	INSERT INTO detalle_venta(pedido_venta_id, modelo_id, cantidad)
 	VALUES(nPedidoVentaId, modelo_id, cantidad);
+
+	CALL calcular_fecha_entrega(nPedidoVentaId);
     
 	CALL throwMsg(0, "");
-END$$
+END $$
 
 DROP PROCEDURE IF EXISTS baja_detalle_venta$$
 CREATE PROCEDURE baja_detalle_venta(nId int)
@@ -653,9 +655,10 @@ END$$
 -- errores: que la concesionaria no exista, que falte un dato, usar caracteres inválidos (números, signos)
 
 DROP PROCEDURE IF EXISTS mod_pedido_venta$$
-CREATE PROCEDURE mod_pedido_venta(nId int, nConcesionariaId int)
+CREATE PROCEDURE mod_pedido_venta(nId int, nConcesionariaId int, dFechaEntrega date)
 proc: BEGIN
 	DECLARE nNewConcesionariaId int;
+	DECLARE dNewFechaEntrega date;
     
 	CALL proxy_errorOnMissing("pedido_venta", "id", nId, null);
 	IF @result = false THEN LEAVE proc; END IF;
@@ -665,9 +668,15 @@ proc: BEGIN
 	ELSE 
 		SET nNewConcesionariaId = nConcesionariaId;
 	END IF;
+	IF ISNULL(dFechaEntrega) THEN
+		SELECT fecha_entrega INTO dNewFechaEntrega FROM pedido_venta WHERE id = nId;
+	ELSE 
+		SET dNewFechaEntrega = dFechaEntrega;
+	END IF;
     
 	UPDATE pedido_venta SET
-		concesionaria_id = nNewConcesionariaId
+		concesionaria_id = nNewConcesionariaId,
+		fecha_entrega = dNewFechaEntrega
 	WHERE id = nId;
 	
     CALL throwMsg(0, "");
