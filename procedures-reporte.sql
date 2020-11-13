@@ -1,4 +1,5 @@
 DELIMITER $$
+set @testPedido = 1$$
 
 /*
 	Dado un numero de pedido, se requiere listar los vehiculos indicando el chasis,
@@ -15,27 +16,21 @@ proc: BEGIN
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Tenes que poner un numero de pedido, pelotudo';
     end if;
     
+    select v.num_chasis as "Chasis",
+		IF(v.finalizado = 1, "Terminado",
+			IF( vxe.vnchasis IS NULL, "Esperando para ensamblaje", CONCAT("En estacion ",vxe.lastSeen)
+			)
+		) as "Estado"
+	from (select * from vehiculo where pedido_venta_id = iPedido) v
+    left join (
+		select vehiculo_num_chasis vnchasis, max(estacion_id) as lastSeen
+        from vehiculo_x_estacion
+        group by vehiculo_num_chasis
+    ) vxe on v.num_chasis = vxe.vnchasis;
    
-   select vehiculo.num_chasis,"Finalizado" as estado
-	from vehiculo 
-	where vehiculo.finalizado = 1 and pedido_venta_id = iPedido
-	union
-	select vehiculo.num_chasis,"A Fabricar" as estado
-	from vehiculo
-	WHERE vehiculo.num_chasis NOT IN 
-								(SELECT vehiculo_num_chasis 
-									FROM vehiculo_x_estacion)
-	and finalizado = 0 and vehiculo.pedido_venta_id = iPedido
-	union
-	select vehiculo.num_chasis, estacion.id as estado
-	from vehiculo
-	inner join vehiculo_x_estacion on vehiculo.num_chasis = vehiculo_x_estacion.vehiculo_num_chasis 
-	inner join estacion on vehiculo_x_estacion.estacion_id = estacion.id
-	where vehiculo.finalizado = 0 and vehiculo_x_estacion.fecha_egreso is null
-	and vehiculo.pedido_venta_id = iPedido
-    group by num_chasis;
 END $$
+call reporte_vehiculos(1)$$ -- Prueba rapida (avanzar algunos chasis para mostrar!)
 
 DELIMITER ;
- 
-call reporte_vehiculos(1); 
+
+;
