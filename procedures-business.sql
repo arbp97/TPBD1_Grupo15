@@ -45,6 +45,40 @@ BEGIN
     CLOSE cursor_detalle_venta;
 END $$
 
+DROP PROCEDURE IF EXISTS calcular_fecha_entrega$$ -- teniendo en cuenta que un vehiculo tarda 1 dia en finalizarse...
+CREATE PROCEDURE calcular_fecha_entrega(pedido_venta_id INT)
+BEGIN
+
+	DECLARE finished INT DEFAULT 0;
+	DECLARE nCantidad INT;
+	DECLARE dFechaEntrega date DEFAULT NOW();
+
+	DECLARE cursor_detalle_venta
+        CURSOR FOR
+            SELECT cantidad FROM detalle_venta WHERE detalle_venta.pedido_venta_id = pedido_venta_id;
+ 	
+    DECLARE CONTINUE HANDLER
+        FOR NOT FOUND SET finished = 1;
+  
+    OPEN cursor_detalle_venta;
+   
+    getDetalle: LOOP
+
+        FETCH cursor_detalle_venta INTO nCantidad;
+      	
+        IF finished = 1 THEN
+            LEAVE getDetalle;
+		END IF;
+
+		SET dFechaEntrega = DATE_ADD(dFechaEntrega, INTERVAL nCantidad DAY);
+
+    END LOOP getDetalle;
+	
+   	CALL mod_pedido_venta(pedido_venta_id, null, dFechaEntrega);
+   
+    CLOSE cursor_detalle_venta;
+END $$
+
 DROP PROCEDURE IF EXISTS iniciar_ensamblado $$ -- PUNTO 9
 CREATE PROCEDURE iniciar_ensamblado(nChasisId INT)
 proc: BEGIN
@@ -77,9 +111,10 @@ proc: BEGIN
 	DECLARE nCantEstacionesLinea int DEFAULT 0; -- TEMP cambiar por max() ?
 	DECLARE nCurrentEstacionId int DEFAULT -1;
 	DECLARE nChasisEstacionId int DEFAULT 0; -- chasis dentro de la estacion siguiente
+	DECLARE bFinalizado bit DEFAULT 0;
 	
 	-- conseguir linea de montaje del modelo del vehiculo
-	SELECT modelo_id INTO linea_montaje_ref FROM vehiculo WHERE vehiculo.num_chasis = nChasisId;
+	SELECT modelo_id,finalizado INTO linea_montaje_ref,bFinalizado FROM vehiculo WHERE vehiculo.num_chasis = nChasisId;
 
 	-- TEMP get cant estaciones 
 	SELECT COUNT(id) INTO nCantEstacionesLinea FROM estacion WHERE linea_montaje_id = linea_montaje_ref;
@@ -88,6 +123,11 @@ proc: BEGIN
 	SELECT estacion_id INTO nCurrentEstacionId FROM vehiculo_x_estacion WHERE vehiculo_x_estacion.vehiculo_num_chasis = nChasisId
 	AND vehiculo_x_estacion.linea_montaje_id = linea_montaje_ref
 	AND fecha_egreso is null;
+
+	IF bFinalizado = 1 THEN
+		CALL throwMsg(-1, "El vehiculo ya está terminado.");
+		LEAVE proc;
+	END IF;
 
 	IF nCurrentEstacionId = -1 THEN
 		CALL throwMsg(-1, "El vehiculo todavia no está en producción.");
@@ -107,15 +147,15 @@ proc: BEGIN
 		END IF;
 
 		CALL alta_vehiculo_x_estacion(nChasisId, (nCurrentEstacionId+1), linea_montaje_ref, NOW() , null);
-
+		-- CALL throwMsg(0, "");
 	ELSE
 		CALL mod_vehiculo(nChasisId, null, null, 1); -- vehiculo finalizado
+        -- CALL throwMsg(0, "Vehiculo completado.");
 	END IF;
     
 	-- vehiculo sale de la estacion
-	CALL  mod_vehiculo_x_estacion(nChasisId, linea_montaje_ref, nCurrentEstacionId, null, NOW());
-
-	CALL throwMsg(0, "");
+	CALL mod_vehiculo_x_estacion(nChasisId, linea_montaje_ref, nCurrentEstacionId, null, NOW());
+    CALL throwMsg(0, "");
 END $$
 
 

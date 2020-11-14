@@ -2,24 +2,6 @@ use automotriz;
 
 DELIMITER $$
 
-/*
-DROP PROCEDURE IF EXISTS TESTalta_concesionaria $$ 
-CREATE PROCEDURE TESTalta_concesionaria(id int, cNombre VARCHAR(100), cDireccion VARCHAR(100))
-proc: BEGIN
-	CALL proxy_errorOnDuplicate("concesionaria", "id", id, null);
-	IF @result = true THEN LEAVE proc; END IF;
-    
-	IF cNombre IS NULL OR cNombre='' OR cDireccion IS NULL OR cDireccion='' THEN
-		CALL throwMsg(-1, "Verifique los valores de sus parametros");
-        LEAVE proc;
-	END IF;
-	
-	INSERT INTO concesionaria(id,nombre,direccion)
-	VALUES(id,cNombre,cDireccion);
-
-	CALL throwMsg(0, "");
-END $$
-*/
 -- CONCESIONARIA ----------------------------------------------------------------------
 
 -- Error: que falte un dato
@@ -567,9 +549,11 @@ proc: BEGIN
 
 	INSERT INTO detalle_venta(pedido_venta_id, modelo_id, cantidad)
 	VALUES(nPedidoVentaId, modelo_id, cantidad);
+
+	CALL calcular_fecha_entrega(nPedidoVentaId);
     
 	CALL throwMsg(0, "");
-END$$
+END $$
 
 DROP PROCEDURE IF EXISTS baja_detalle_venta$$
 CREATE PROCEDURE baja_detalle_venta(nId int)
@@ -653,9 +637,10 @@ END$$
 -- errores: que la concesionaria no exista, que falte un dato, usar caracteres inválidos (números, signos)
 
 DROP PROCEDURE IF EXISTS mod_pedido_venta$$
-CREATE PROCEDURE mod_pedido_venta(nId int, nConcesionariaId int)
+CREATE PROCEDURE mod_pedido_venta(nId int, nConcesionariaId int, dFechaEntrega date)
 proc: BEGIN
 	DECLARE nNewConcesionariaId int;
+	DECLARE dNewFechaEntrega date;
     
 	CALL proxy_errorOnMissing("pedido_venta", "id", nId, null);
 	IF @result = false THEN LEAVE proc; END IF;
@@ -665,9 +650,15 @@ proc: BEGIN
 	ELSE 
 		SET nNewConcesionariaId = nConcesionariaId;
 	END IF;
+	IF ISNULL(dFechaEntrega) THEN
+		SELECT fecha_entrega INTO dNewFechaEntrega FROM pedido_venta WHERE id = nId;
+	ELSE 
+		SET dNewFechaEntrega = dFechaEntrega;
+	END IF;
     
 	UPDATE pedido_venta SET
-		concesionaria_id = nNewConcesionariaId
+		concesionaria_id = nNewConcesionariaId,
+		fecha_entrega = dNewFechaEntrega
 	WHERE id = nId;
 	
     CALL throwMsg(0, "");
@@ -808,9 +799,9 @@ proc: BEGIN
 		CALL throwMsg(-1, "Faltan datos!");
         LEAVE proc;
     END IF;
-   
-	INSERT INTO vehiculo_x_estacion(insumo_id, estacion_id, linea_montaje_id, cantidad)
-	VALUES(nChasisId,nEstacionId,nLineaMontajeId,nCantidad);
+    
+    INSERT INTO insumo_x_estacion(insumo_id, estacion_id, linea_montaje_id, cantidad)
+	VALUES(nInsumoId,nEstacionId,nLineaMontajeId,nCantidad);
 
 	CALL throwMsg(0, "");
 END $$
