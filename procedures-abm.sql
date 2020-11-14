@@ -817,9 +817,9 @@ proc: BEGIN
 		CALL throwMsg(-1, "Faltan datos!");
         LEAVE proc;
     END IF;
-   
-	INSERT INTO vehiculo_x_estacion(insumo_id, estacion_id, linea_montaje_id, cantidad)
-	VALUES(nChasisId,nEstacionId,nLineaMontajeId,nCantidad);
+    
+    INSERT INTO insumo_x_estacion(insumo_id, estacion_id, linea_montaje_id, cantidad)
+	VALUES(nInsumoId,nEstacionId,nLineaMontajeId,nCantidad);
 
 	CALL throwMsg(0, "");
 END $$
