@@ -76,22 +76,31 @@ proc: BEGIN
 END $$
 call reporte_insumos(1)$$ -- Prueba rapida
 
-select * from vehiculo v where v.pedido_venta_id = @testNumero;
+select * from vehiculo v where v.pedido_venta_id = @testNumero$$
 
 
 /*
 	Dada una linea de montaje, indicar el tiempo promedio de construccion de los vehiculos
     (tener en cuenta solo los vehiculos terminados)
 */
-DROP PROCEDURE IF EXISTS reporte_puto$$
-CREATE PROCEDURE reporte_puto(iLinea int)
+DROP PROCEDURE IF EXISTS reporte_promedio$$
+CREATE PROCEDURE reporte_promedio(iLinea int)
 proc: BEGIN
-	DECLARE C int default 0;
+	DECLARE lineaStationCount int default (select count(id) from estacion where linea_montaje_id = iLinea);
     
-	
+	select iLinea as "Linea", concat(TIME_FORMAT(SEC_TO_TIME(AVG(TIMEDIFF(maxt, mint))), "%H:%i:%s"), " horas") as "Promedio" from (
+		select * from (
+			select vehiculo_num_chasis as chasis, min(fecha_ingreso) as mint, max(fecha_egreso) as maxt, count(fecha_egreso) as passes
+			from vehiculo_x_estacion vxe
+			where vxe.linea_montaje_id = iLinea
+			group by vehiculo_num_chasis
+		) short where passes = lineaStationCount
+	) short2
+    
+    ;
    
 END $$
-call reporte_puto(1)$$ -- Prueba rapida
+call reporte_promedio(1)$$ -- Prueba rapida
 
 DELIMITER ;
 
