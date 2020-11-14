@@ -147,15 +147,15 @@ proc: BEGIN
 		END IF;
 
 		CALL alta_vehiculo_x_estacion(nChasisId, (nCurrentEstacionId+1), linea_montaje_ref, NOW() , null);
-
+		-- CALL throwMsg(0, "");
 	ELSE
 		CALL mod_vehiculo(nChasisId, null, null, 1); -- vehiculo finalizado
+        -- CALL throwMsg(0, "Vehiculo completado.");
 	END IF;
     
 	-- vehiculo sale de la estacion
-	CALL  mod_vehiculo_x_estacion(nChasisId, linea_montaje_ref, nCurrentEstacionId, null, NOW());
-
-	CALL throwMsg(0, "");
+	CALL mod_vehiculo_x_estacion(nChasisId, linea_montaje_ref, nCurrentEstacionId, null, NOW());
+    CALL throwMsg(0, "");
 END $$
 
 
