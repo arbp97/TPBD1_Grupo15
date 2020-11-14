@@ -37,37 +37,20 @@ CREATE PROCEDURE reporte_insumos(iPedido int)
 proc: BEGIN
 	DECLARE C int default 0;
     
-    drop table if exists _temp;
-    create temporary table _temp (chasis int,linea_montaje_id int)
-    select v.num_chasis chasis,lm.id as linea_montaje_id
-	from (select * from vehiculo where pedido_venta_id = iPedido) v
-    left join (
-		select vehiculo_num_chasis vnchasis
-        from vehiculo_x_estacion
-        group by vehiculo_num_chasis
-    ) vxe on v.num_chasis = vxe.vnchasis
-    left join linea_montaje lm on lm.modelo_id = v.modelo_id
-    where v.finalizado = 0 and vxe.vnchasis is null;
-    -- delete from _temp where valid = FALSE;
-    
-    drop table if exists _temp2;
-    create temporary table _temp2 (
-		insumo_id int primary key,
-        insumo_nombre varchar(100) default "lol",
-        cantidad int not null
-    );
-    insert into _temp2 (insumo_id, insumo_nombre, cantidad)
-    select ixe.insumo_id,i.nombre,ixe.cantidad from _temp miniv
+    select ixe.insumo_id as "Insumo ID", i.nombre as "Insumo", sum(ixe.cantidad) as "Cantidad" from (
+		select v.num_chasis chasis,lm.id as linea_montaje_id
+		from (select * from vehiculo where pedido_venta_id = iPedido) v
+		left join (
+			select vehiculo_num_chasis vnchasis
+			from vehiculo_x_estacion
+			group by vehiculo_num_chasis
+		) vxe on v.num_chasis = vxe.vnchasis
+		left join linea_montaje lm on lm.modelo_id = v.modelo_id
+		where v.finalizado = 0 and vxe.vnchasis is null
+    ) miniv
     left join insumo_x_estacion ixe on ixe.linea_montaje_id = miniv.linea_montaje_id
     left join insumo i on ixe.insumo_id = i.id
-    on duplicate key update _temp2.cantidad = _temp2.cantidad + ixe.cantidad
-    ;
-    
-    -- select * from _temp;
-    select * from _temp2;
-    
-    drop table _temp;
-    drop table _temp2;
+    group by insumo_id order by insumo_id asc;
 END $$
 
 
