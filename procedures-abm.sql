@@ -2,24 +2,6 @@ use automotriz;
 
 DELIMITER $$
 
-/*
-DROP PROCEDURE IF EXISTS TESTalta_concesionaria $$ 
-CREATE PROCEDURE TESTalta_concesionaria(id int, cNombre VARCHAR(100), cDireccion VARCHAR(100))
-proc: BEGIN
-	CALL proxy_errorOnDuplicate("concesionaria", "id", id, null);
-	IF @result = true THEN LEAVE proc; END IF;
-    
-	IF cNombre IS NULL OR cNombre='' OR cDireccion IS NULL OR cDireccion='' THEN
-		CALL throwMsg(-1, "Verifique los valores de sus parametros");
-        LEAVE proc;
-	END IF;
-	
-	INSERT INTO concesionaria(id,nombre,direccion)
-	VALUES(id,cNombre,cDireccion);
-
-	CALL throwMsg(0, "");
-END $$
-*/
 -- CONCESIONARIA ----------------------------------------------------------------------
 
 -- Error: que falte un dato

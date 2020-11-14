@@ -45,7 +45,7 @@ BEGIN
     CLOSE cursor_detalle_venta;
 END $$
 
-DROP PROCEDURE IF EXISTS calcular_fecha_entrega$$ -- teniendo en cuenta que un vehiculo tarda 1 dia en finalizarse
+DROP PROCEDURE IF EXISTS calcular_fecha_entrega$$ -- teniendo en cuenta que un vehiculo tarda 1 dia en finalizarse...
 CREATE PROCEDURE calcular_fecha_entrega(pedido_venta_id INT)
 BEGIN
 

@@ -1,5 +1,4 @@
 DELIMITER $$
-set @testNumero = 1$$
 
 /*
 	Dado un numero de pedido, se requiere listar los vehiculos indicando el chasis,
@@ -11,7 +10,7 @@ proc: BEGIN
 	DECLARE C int default 0;
     
 	If iPedido is NULL then
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Tenes que poner un numero de pedido, pelotudo';
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Tenes que poner un numero de pedido';
     end if;
     
     select v.num_chasis as "Chasis",
@@ -27,11 +26,7 @@ proc: BEGIN
     ) vxe on v.num_chasis = vxe.vnchasis;
    
 END $$
-call reporte_vehiculos(1)$$ -- Prueba rapida
 
-
-
-set @testNumero = 1$$
 /*
 	Dado un numero de pedido, se requiere listar los insumos que sera necesario
     solicitar, indicando codigo de insumo y cantidad requerida para ese pedido.
@@ -74,9 +69,6 @@ proc: BEGIN
     drop table _temp;
     drop table _temp2;
 END $$
-call reporte_insumos(1)$$ -- Prueba rapida
-
-select * from vehiculo v where v.pedido_venta_id = @testNumero$$
 
 
 /*
@@ -100,8 +92,5 @@ proc: BEGIN
     ;
    
 END $$
-call reporte_promedio(1)$$ -- Prueba rapida
 
 DELIMITER ;
-
-;
