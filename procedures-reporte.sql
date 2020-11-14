@@ -42,7 +42,7 @@ CREATE PROCEDURE reporte_insumos(iPedido int)
 proc: BEGIN
 	DECLARE C int default 0;
     
-    select ixe.insumo_id,i.nombre,sum(ixe.cantidad) from (
+    select ixe.insumo_id as "Insumo ID", i.nombre as "Insumo", sum(ixe.cantidad) as "Cantidad" from (
 		select v.num_chasis chasis,lm.id as linea_montaje_id
 		from (select * from vehiculo where pedido_venta_id = iPedido) v
 		left join (
