@@ -78,6 +78,7 @@ CREATE TABLE `vehiculo` (
 	foreign key (modelo_id) references modelo(id),
 	foreign key (pedido_venta_id) references pedido_venta(id)
 );
+CREATE UNIQUE INDEX index_auto ON vehiculo ( num_chasis,pedido_venta_id );
 
 
 -- tabla X tabla
